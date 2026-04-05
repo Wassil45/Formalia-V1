@@ -1,4 +1,23 @@
+import { useSettings } from '../../hooks/useSettings';
+import { Skeleton } from '../../components/ui/Skeleton';
+
 export function Confidentialite() {
+  const { data: s, isLoading } = useSettings();
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-16 space-y-8">
+        {[1,2,3,4].map(i => (
+          <div key={i} className="space-y-3">
+            <Skeleton className="h-6 w-1/3" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-slate-900 mb-8">Politique de Confidentialité</h1>
@@ -44,7 +63,7 @@ export function Confidentialite() {
             <li>Droit de rectification : Vous pouvez modifier vos informations depuis votre profil.</li>
           </ul>
           <p className="text-slate-600 mt-4">
-            Pour exercer ces droits, vous pouvez utiliser les fonctionnalités de votre espace client ou nous contacter à dpo@formalia.fr.
+            Pour exercer ces droits, vous pouvez utiliser les fonctionnalités de votre espace client ou nous contacter à <a href={`mailto:${s?.email_dpo}`} className="text-primary hover:underline">{s?.email_dpo}</a>.
           </p>
         </section>
       </div>

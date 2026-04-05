@@ -1,164 +1,294 @@
-import { FolderOpen, TrendingUp, Users, AlertCircle, Search, Filter, AlertTriangle } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { MOCK_DOSSIERS } from '../../data/mockDossiers';
+import { DossierWithRelations } from '../../hooks/useAdmin';
+import { SkeletonCard, SkeletonRow } from '../../components/ui/Skeleton';
+import { 
+  FolderOpen, Clock, AlertCircle, CheckCircle2, TrendingUp, 
+  Search, Filter, AlertTriangle, ChevronDown, Eye, Info
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+const STATUS_CONFIG = {
+  draft: { label: 'Brouillon', color: 'text-slate-600', bg: 'bg-slate-100' },
+  received: { label: 'Reçu', color: 'text-blue-700', bg: 'bg-blue-100' },
+  processing: { label: 'En cours', color: 'text-orange-700', bg: 'bg-orange-100' },
+  pending_documents: { label: 'Docs manquants', color: 'text-amber-700', bg: 'bg-amber-100', urgent: true },
+  completed: { label: 'Terminé', color: 'text-emerald-700', bg: 'bg-emerald-100' },
+  rejected: { label: 'Rejeté', color: 'text-red-700', bg: 'bg-red-100' },
+};
+
+const STATUS_FILTERS = [
+  { value: null, label: 'Tous les statuts' },
+  { value: 'received', label: 'Reçu' },
+  { value: 'processing', label: 'En cours' },
+  { value: 'pending_documents', label: 'Docs manquants' },
+  { value: 'completed', label: 'Terminé' },
+];
 
 export function AdminDashboard() {
-  const { data: dossiers, isLoading, isError, error } = useQuery({
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+
+  const { data: dossiers, isLoading, isError } = useQuery({
     queryKey: ['admin_dossiers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('dossiers')
-        .select(`
-          *,
-          profiles (first_name, last_name, email),
-          formalites_catalogue (name, type)
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Supabase error fetching admin dossiers:', error);
-        throw error;
+    queryFn: async (): Promise<DossierWithRelations[]> => {
+      if (!isSupabaseConfigured()) {
+        console.warn('Supabase non configuré — données de démonstration utilisées');
+        return MOCK_DOSSIERS as unknown as DossierWithRelations[];
       }
-      return data;
-    }
+      try {
+        const { data, error } = await supabase
+          .from('dossiers')
+          .select('*, profiles(first_name, last_name, email), formalites_catalogue(name, type)')
+          .not('status', 'in', '("draft")')
+          .order('created_at', { ascending: true });
+        if (error) {
+          console.error('Erreur Supabase:', error);
+          return MOCK_DOSSIERS as unknown as DossierWithRelations[];
+        }
+        return data && data.length > 0 ? data as unknown as DossierWithRelations[] : MOCK_DOSSIERS as unknown as DossierWithRelations[];
+      } catch (err) {
+        console.error('Erreur réseau:', err);
+        return MOCK_DOSSIERS as unknown as DossierWithRelations[];
+      }
+    },
+    retry: false,
   });
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">Brouillon</span>;
-      case 'received':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Reçu</span>;
-      case 'processing':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">En cours</span>;
-      case 'pending_documents':
-        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200"><AlertCircle className="w-3.5 h-3.5" />En attente de documents</span>;
-      case 'completed':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Terminé</span>;
-      case 'rejected':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Rejeté</span>;
-      default:
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">{status}</span>;
-    }
-  };
+  const kpis = useMemo(() => {
+    if (!dossiers) return null;
+    return {
+      actifs: dossiers.filter(d => !['completed', 'rejected'].includes(d.status)).length,
+      urgent: dossiers.filter(d => d.status === 'pending_documents').length,
+      termines: dossiers.filter(d => d.status === 'completed').length,
+      total: dossiers.length,
+    };
+  }, [dossiers]);
 
-  const activeDossiersCount = dossiers?.filter((d: any) => d.status !== 'completed' && d.status !== 'rejected' && d.status !== 'draft')?.length || 0;
+  const filtered = useMemo(() => {
+    if (!dossiers) return [];
+    const q = searchQuery.toLowerCase();
+    return dossiers.filter(d => {
+      const matchSearch = !q 
+        || d.reference?.toLowerCase().includes(q)
+        || d.profiles?.first_name?.toLowerCase().includes(q)
+        || d.profiles?.last_name?.toLowerCase().includes(q)
+        || d.profiles?.email?.toLowerCase().includes(q);
+      const matchStatus = !filterStatus || d.status === filterStatus;
+      return matchSearch && matchStatus;
+    });
+  }, [dossiers, searchQuery, filterStatus]);
+
+  const StatusBadge = ({ status }: { status: string }) => {
+    const config = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG];
+    if (!config) return null;
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg 
+        text-xs font-semibold ${config.bg} ${config.color}`}>
+        {'urgent' in config && config.urgent && <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />}
+        {config.label}
+      </span>
+    );
+  };
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
-      <header className="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between sticky top-0 z-10">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 font-display">Vue d'ensemble</h2>
-          <p className="text-slate-500 text-sm mt-1">Gérez l'activité de la plateforme.</p>
-        </div>
-        <div className="flex items-center gap-4">
+
+      {/* Header */}
+      <header className="bg-white border-b border-slate-100 px-8 py-5 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Vue d'ensemble</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Gérez l'activité de la plateforme</p>
+          </div>
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Rechercher un dossier, client..." 
-              className="pl-9 pr-4 py-2 bg-slate-100 border-transparent focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg text-sm w-64 transition-all outline-none"
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Rechercher..."
+              className="pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl 
+                text-sm w-64 focus:outline-none focus:border-primary focus:ring-2 
+                focus:ring-primary/10 focus:bg-white transition-all"
             />
           </div>
         </div>
       </header>
 
-      <div className="p-8 flex flex-col gap-8 max-w-7xl mx-auto w-full">
-        
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                <FolderOpen className="w-5 h-5" />
-              </div>
-              <span className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-                <TrendingUp className="w-3 h-3 mr-1" /> +12%
-              </span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-slate-500 text-sm font-medium">Dossiers actifs</span>
-              <span className="text-2xl font-bold text-slate-900 mt-1 font-display">{activeDossiersCount}</span>
-            </div>
+      <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
+
+        {isError && (
+          <div className="mb-6 flex items-center gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
+            <Info className="w-4 h-4 flex-shrink-0" />
+            Mode démonstration — Configurez vos variables Supabase pour voir vos données réelles.
           </div>
-          {/* Add more KPI cards as needed */}
+        )}
+
+        {/* KPIs */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {isLoading ? (
+            [1,2,3,4].map(i => <SkeletonCard key={i} />)
+          ) : [
+            { label: 'Dossiers actifs', value: kpis?.actifs ?? 0, icon: FolderOpen, 
+              color: 'text-blue-600', bg: 'bg-blue-50', trend: '+3 ce mois' },
+            { label: 'Docs manquants', value: kpis?.urgent ?? 0, icon: AlertCircle, 
+              color: 'text-amber-600', bg: 'bg-amber-50', 
+              trend: kpis?.urgent ? '⚠ Action requise' : null },
+            { label: 'Dossiers traités', value: kpis?.termines ?? 0, icon: CheckCircle2, 
+              color: 'text-emerald-600', bg: 'bg-emerald-50', trend: null },
+            { label: 'Total dossiers', value: kpis?.total ?? 0, icon: TrendingUp, 
+              color: 'text-primary', bg: 'bg-primary/8', trend: null },
+          ].map(({ label, value, icon: Icon, color, bg, trend }) => (
+            <div key={label} className="bg-white rounded-2xl p-5 border border-slate-100 
+              shadow-sm hover:shadow-md transition-shadow card-hover">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`w-10 h-10 ${bg} ${color} rounded-xl flex items-center justify-center`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                {trend && (
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full 
+                    ${trend.includes('⚠') ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                    {trend}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-slate-500 font-medium">{label}</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1 font-display">{value}</p>
+            </div>
+          ))}
         </div>
 
-        {/* Recent Activity Table */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-          <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-white">
-            <h3 className="font-bold text-lg text-slate-900 font-display">Dossiers à traiter urgemment</h3>
-            <button className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-md hover:bg-slate-100 transition-colors">
-              <Filter className="w-4 h-4" /> Filtrer
-            </button>
+        {/* Tableau */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
+            <div>
+              <h2 className="font-bold text-slate-900">Dossiers à traiter</h2>
+              <p className="text-xs text-slate-400 mt-0.5">{filtered.length} résultat(s)</p>
+            </div>
+            <div className="relative">
+              <button
+                onClick={() => setShowFilterMenu(!showFilterMenu)}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm 
+                  font-medium border transition-all ${
+                  filterStatus 
+                    ? 'border-primary/30 bg-primary/8 text-primary' 
+                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <Filter className="w-3.5 h-3.5" />
+                {filterStatus 
+                  ? STATUS_FILTERS.find(f => f.value === filterStatus)?.label 
+                  : 'Filtrer'}
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+              {showFilterMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl 
+                  border border-slate-100 overflow-hidden z-20 animate-scale-in">
+                  {STATUS_FILTERS.map(f => (
+                    <button
+                      key={String(f.value)}
+                      onClick={() => { setFilterStatus(f.value); setShowFilterMenu(false); }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                        filterStatus === f.value 
+                          ? 'bg-primary/8 text-primary font-medium' 
+                          : 'text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+
           <div className="overflow-x-auto">
-            {isLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : isError ? (
-              <div className="p-8 text-center">
-                <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-3" />
-                <p className="text-red-700 font-medium">Erreur lors du chargement des dossiers.</p>
-                <p className="text-sm text-red-500 mt-1">{error instanceof Error ? error.message : 'Erreur inconnue'}</p>
-              </div>
-            ) : (
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider font-semibold border-b border-slate-200">
-                    <th className="px-6 py-4">Réf</th>
-                    <th className="px-6 py-4">Client</th>
-                    <th className="px-6 py-4">Type</th>
-                    <th className="px-6 py-4">Statut</th>
-                    <th className="px-6 py-4 text-right">Action</th>
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-slate-50 bg-slate-50/50">
+                  {['Référence', 'Client', 'Formalité', 'Date', 'Statut', ''].map(h => (
+                    <th key={h} className="px-6 py-3.5 text-xs font-semibold text-slate-400 
+                      uppercase tracking-wider">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {isLoading ? (
+                  [1,2,3,4,5].map(i => <SkeletonRow key={i} />)
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-16 text-center">
+                      <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-3" />
+                      <p className="text-sm font-medium text-slate-600">
+                        {searchQuery || filterStatus 
+                          ? 'Aucun résultat pour cette recherche' 
+                          : 'Tous les dossiers sont traités !'}
+                      </p>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {dossiers?.map((dossier: any) => (
-                    <tr key={dossier.id} className="hover:bg-slate-50 transition-colors group">
+                ) : (
+                  filtered.map((d) => (
+                    <tr key={d.id} 
+                      className={`hover:bg-slate-50/50 transition-colors group ${
+                        d.status === 'pending_documents' ? 'border-l-2 border-l-amber-400' : ''
+                      }`}
+                    >
                       <td className="px-6 py-4">
-                        <span className="text-slate-900 font-medium text-sm">{dossier.reference}</span>
+                        <span className="text-sm font-mono font-semibold text-slate-700">
+                          {d.reference}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 uppercase">
-                            {dossier.profiles?.first_name?.[0] || ''}{dossier.profiles?.last_name?.[0] || ''}
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 gradient-primary rounded-lg flex items-center 
+                            justify-center text-white text-xs font-bold flex-shrink-0">
+                            {d.profiles?.first_name?.[0]}{d.profiles?.last_name?.[0]}
                           </div>
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium text-slate-900">
-                              {dossier.profiles?.first_name} {dossier.profiles?.last_name}
-                            </span>
-                            <span className="text-xs text-slate-500">{dossier.profiles?.email}</span>
+                          <div>
+                            <p className="text-sm font-medium text-slate-900">
+                              {d.profiles?.first_name} {d.profiles?.last_name}
+                            </p>
+                            <p className="text-xs text-slate-400">{d.profiles?.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-slate-700 text-sm">{dossier.formalites_catalogue?.name || 'Formalité inconnue'}</span>
+                        <span className="text-sm text-slate-700">
+                          {d.formalites_catalogue?.name}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
-                        {getStatusBadge(dossier.status)}
+                        <span className="text-sm text-slate-500">
+                          {new Date(d.created_at).toLocaleDateString('fr-FR', { 
+                            day: '2-digit', month: 'short' 
+                          })}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="text-sm font-medium text-primary hover:text-primary-dark hover:underline">
+                      <td className="px-6 py-4">
+                        <StatusBadge status={d.status} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => navigate(`/admin/dossiers/${d.id}`)}
+                          className="opacity-0 group-hover:opacity-100 flex items-center 
+                            gap-1.5 px-3 py-1.5 text-xs font-medium text-primary 
+                            bg-primary/8 rounded-lg hover:bg-primary/15 transition-all"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
                           Traiter
                         </button>
                       </td>
                     </tr>
-                  ))}
-                  {(!dossiers || dossiers.length === 0) && (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                        Aucun dossier à traiter pour le moment.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            )}
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -10,21 +10,29 @@ export function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
   const location = useLocation();
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 gradient-primary rounded-xl flex items-center 
+            justify-center shadow-lg animate-pulse">
+            <div className="w-5 h-5 bg-white/50 rounded" />
+          </div>
+          <p className="text-sm text-slate-500 font-medium">Chargement...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
-    return <Navigate to={`/auth?redirect=${location.pathname}`} replace />;
+    // Protection open redirect
+    const safePath = encodeURIComponent(location.pathname);
+    return <Navigate to={`/auth?redirect=${safePath}`} replace />;
   }
 
-  if (requiredRole) {
-    const currentRole = role || 'client'; // Default to client if profile is missing
-    if (currentRole !== requiredRole) {
-      // Prevent infinite redirects if already on the target path
-      const targetPath = currentRole === 'admin' ? '/admin' : '/dashboard';
-      if (location.pathname !== targetPath) {
-        return <Navigate to={targetPath} replace />;
-      }
+  if (requiredRole && role !== requiredRole) {
+    const targetPath = role === 'admin' ? '/admin' : '/dashboard';
+    if (location.pathname !== targetPath) {
+      return <Navigate to={targetPath} replace />;
     }
   }
 

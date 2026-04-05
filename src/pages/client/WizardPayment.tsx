@@ -1,109 +1,233 @@
-import { CheckCircle2, FileText, CreditCard, ShieldCheck } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useWizard } from '../../context/WizardContext';
+import { useToast } from '../../components/ui/Toast';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
+import { 
+  CreditCard, ShieldCheck, FileText, CheckCircle2, 
+  ArrowLeft, Loader2, Lock, Building2, MapPin, File
+} from 'lucide-react';
+
+const FRAIS_GREFFE = 37.45;
 
 export function WizardPayment() {
+  const navigate = useNavigate();
+  const { data: wizardData, setDossierId, canProceedToStep } = useWizard();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    if (!canProceedToStep(4)) navigate('/formalite/etape-3');
+  }, []);
+
+  const prixHT = wizardData.formalitePriceHT ?? 0;
+  const tauxTVA = wizardData.formaliteTvaRate ?? 20;
+  const montantTVA = +(prixHT * tauxTVA / 100).toFixed(2);
+  const prixTTC = +(prixHT + montantTVA).toFixed(2);
+  const totalTTC = +(prixTTC + FRAIS_GREFFE).toFixed(2);
+
+  const formatEur = (n: number) => 
+    n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+
+  const handlePayment = async () => {
+    setIsProcessing(true);
+    try {
+      // 1. Créer le dossier en DB
+      const { data: dossier, error } = await supabase
+        .from('dossiers')
+        .insert({
+          reference: 'DOS-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+          client_id: user!.id,
+          formalite_id: wizardData.formaliteId!,
+          status: 'draft',
+          form_data: {
+            companyInfo: wizardData.companyInfo,
+            documents: wizardData.documents.map(d => ({ name: d.name, url: d.url })),
+          } as any,
+          total_amount: totalTTC,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      setDossierId((dossier as any).id);
+
+      // 2. Créer session Stripe Checkout
+      const response = await fetch('/api/payments/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          dossierId: (dossier as any).id, 
+          formaliteId: wizardData.formaliteId,
+          successUrl: window.location.origin + '/dashboard?payment=success',
+          cancelUrl: window.location.origin + '/dashboard?payment=cancel'
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de la création de la session de paiement');
+      }
+
+      const { url } = await response.json();
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('URL de paiement non reçue');
+      }
+    } catch (err: unknown) {
+      toast('error', 'Erreur', err instanceof Error ? err.message : 'Une erreur est survenue');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
-    <div className="flex-grow flex flex-col items-center py-8 md:py-12 px-4 bg-background-light min-h-screen">
-      <div className="w-full max-w-[900px] flex flex-col gap-8">
-        
-        <div className="flex flex-col gap-3">
-          <div className="flex justify-between items-center">
-            <p className="text-slate-900 text-base font-medium">Étape 5 sur 5</p>
-            <p className="text-primary text-sm font-semibold">100% complété</p>
-          </div>
-          <div className="w-full rounded-full bg-slate-200 h-2 overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all duration-500 ease-out" style={{ width: '100%' }}></div>
-          </div>
-        </div>
+    <div className="max-w-4xl mx-auto animate-fade-in-up">
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">
+          Récapitulatif et paiement
+        </h1>
+        <p className="text-slate-500">Vérifiez vos informations avant de procéder.</p>
+      </div>
 
-        <div className="flex flex-col gap-2">
-          <h1 className="text-slate-900 text-3xl md:text-4xl font-black tracking-tight font-display">Finalisation du dossier</h1>
-          <p className="text-slate-500 text-lg">Vérifiez les informations et procédez au paiement sécurisé.</p>
-        </div>
+      <div className="grid lg:grid-cols-5 gap-6">
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Recap Column */}
-          <div className="lg:col-span-2 flex flex-col gap-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center gap-3">
-                <FileText className="w-5 h-5 text-slate-500" />
-                <h2 className="font-bold text-slate-900">Récapitulatif des informations</h2>
+        {/* Récap — 3/5 */}
+        <div className="lg:col-span-3 space-y-4">
+
+          {/* Formalité */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-slate-50 bg-slate-50/50">
+              <FileText className="w-4 h-4 text-slate-400" />
+              <span className="text-sm font-semibold text-slate-700">Formalité choisie</span>
+            </div>
+            <div className="p-5">
+              <p className="font-bold text-slate-900">{wizardData.formaliteName}</p>
+              <p className="text-sm text-slate-500 mt-1 capitalize">{wizardData.formaliteType}</p>
+            </div>
+          </div>
+
+          {/* Entreprise */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-slate-50 bg-slate-50/50">
+              <Building2 className="w-4 h-4 text-slate-400" />
+              <span className="text-sm font-semibold text-slate-700">Entreprise</span>
+            </div>
+            <div className="p-5 space-y-3">
+              <div>
+                <p className="text-xs text-slate-400 uppercase tracking-wide mb-0.5">Dénomination</p>
+                <p className="text-sm font-semibold text-slate-900">
+                  {wizardData.companyInfo?.denomination}
+                  {wizardData.companyInfo?.sigle && ` (${wizardData.companyInfo.sigle})`}
+                </p>
               </div>
-              <div className="p-6 flex flex-col gap-6">
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Type de formalité</span>
-                    <span className="text-slate-900 font-medium">Création SAS</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Dénomination</span>
-                    <span className="text-slate-900 font-medium">Formalia Tech</span>
-                  </div>
-                  <div className="flex flex-col gap-1 md:col-span-2">
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Siège social</span>
-                    <span className="text-slate-900 font-medium">123 Avenue des Champs-Élysées, 75008 Paris</span>
-                  </div>
-                </div>
-
-                <div className="border-t border-slate-100 pt-4">
-                  <h3 className="text-sm font-bold text-slate-900 mb-3">Documents fournis</h3>
-                  <ul className="flex flex-col gap-2">
-                    <li className="flex items-center gap-2 text-sm text-slate-600">
-                      <CheckCircle2 className="w-4 h-4 text-green-500" />
-                      Pièce d'identité du dirigeant
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600">
-                      <CheckCircle2 className="w-4 h-4 text-green-500" />
-                      Justificatif de domicile
-                    </li>
-                  </ul>
-                </div>
-
+              <div>
+                <p className="text-xs text-slate-400 uppercase tracking-wide mb-0.5">Siège social</p>
+                <p className="text-sm text-slate-700">
+                  {wizardData.companyInfo?.adresse}, {wizardData.companyInfo?.codePostal} {wizardData.companyInfo?.ville}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Payment Column */}
-          <div className="flex flex-col gap-6">
-            <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-200 overflow-hidden sticky top-6">
-              <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white">
-                <h2 className="font-bold text-lg mb-1">Total à régler</h2>
-                <div className="flex items-end gap-1">
-                  <span className="text-4xl font-black tracking-tight">149</span>
-                  <span className="text-xl font-medium text-slate-300 mb-1">€ HT</span>
+          {/* Documents */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-slate-50 bg-slate-50/50">
+              <File className="w-4 h-4 text-slate-400" />
+              <span className="text-sm font-semibold text-slate-700">
+                Documents fournis ({wizardData.documents.length})
+              </span>
+            </div>
+            <div className="p-5 space-y-2">
+              {wizardData.documents.map(doc => (
+                <div key={doc.id} className="flex items-center gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <span className="text-sm text-slate-700 truncate">{doc.name}</span>
                 </div>
-                <p className="text-slate-400 text-sm mt-2">+ 29.80€ TVA (20%)</p>
-              </div>
-              
-              <div className="p-6 flex flex-col gap-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-600">Frais de formalité</span>
-                  <span className="font-medium text-slate-900">149.00 €</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-600">Frais de greffe (estimés)</span>
-                  <span className="font-medium text-slate-900">37.45 €</span>
-                </div>
-                <div className="w-full h-px bg-slate-100 my-2"></div>
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-900">Total TTC</span>
-                  <span className="font-bold text-lg text-slate-900">216.25 €</span>
-                </div>
-
-                <button className="mt-4 w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl shadow-lg shadow-primary/30 transition-all flex items-center justify-center gap-2">
-                  <CreditCard className="w-5 h-5" />
-                  Payer par carte
-                </button>
-
-                <div className="flex items-center justify-center gap-2 mt-2 text-xs text-slate-500">
-                  <ShieldCheck className="w-4 h-4 text-green-500" />
-                  Paiement 100% sécurisé via Stripe
-                </div>
-              </div>
+              ))}
             </div>
           </div>
+        </div>
 
+        {/* Paiement — 2/5 */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-lg sticky top-24">
+
+            {/* Header prix */}
+            <div className="p-6 gradient-primary rounded-t-2xl text-white">
+              <p className="text-sm font-medium text-white/80 mb-1">Total à régler</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-black">{formatEur(totalTTC)}</span>
+              </div>
+              <p className="text-xs text-white/60 mt-1">TVA et frais de greffe inclus</p>
+            </div>
+
+            {/* Détail */}
+            <div className="p-5 space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Honoraires HT</span>
+                <span className="font-medium text-slate-900">{formatEur(prixHT)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">TVA ({tauxTVA}%)</span>
+                <span className="font-medium text-slate-900">{formatEur(montantTVA)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Frais de greffe</span>
+                <span className="font-medium text-slate-900">{formatEur(FRAIS_GREFFE)}</span>
+              </div>
+              <div className="border-t border-slate-100 pt-3 flex justify-between">
+                <span className="font-bold text-slate-900">Total TTC</span>
+                <span className="font-bold text-slate-900">{formatEur(totalTTC)}</span>
+              </div>
+            </div>
+
+            {/* Bouton paiement */}
+            <div className="px-5 pb-5 space-y-3">
+              <button
+                onClick={handlePayment}
+                disabled={isProcessing}
+                className={`w-full flex items-center justify-center gap-2.5 py-3.5 
+                  rounded-xl text-sm font-bold text-white transition-all ${
+                  isProcessing 
+                    ? 'bg-slate-300 cursor-not-allowed' 
+                    : 'gradient-primary shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-0.5'
+                }`}
+              >
+                {isProcessing ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Traitement...</>
+                ) : (
+                  <><CreditCard className="w-4 h-4" /> Payer par carte</>
+                )}
+              </button>
+
+              <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
+                <Lock className="w-3 h-3" />
+                Paiement sécurisé 256-bit SSL
+              </div>
+              <div className="flex items-center justify-center gap-1.5 text-xs text-emerald-600 
+                bg-emerald-50 rounded-xl py-2.5">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Remboursement si dossier non transmis
+              </div>
+            </div>
+
+            {/* Retour */}
+            <div className="px-5 pb-5">
+              <button
+                onClick={() => navigate('/formalite/etape-3')}
+                className="w-full flex items-center justify-center gap-2 py-2.5 
+                  text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-50 
+                  rounded-xl transition-all"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Modifier le dossier
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

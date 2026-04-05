@@ -4,35 +4,48 @@ import { PublicLayout } from './components/layout/PublicLayout';
 import { ClientLayout } from './components/layout/ClientLayout';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
+import { WizardLayout } from './components/layout/WizardLayout';
 import { CookieBanner } from './components/ui/CookieBanner';
-
 import { ErrorBoundary } from './components/ErrorBoundary';
 
-// Public Pages
-const Home = lazy(() => import('./pages/public/Home').then(module => ({ default: module.Home })));
-const Services = lazy(() => import('./pages/public/Services').then(module => ({ default: module.Services })));
-const Tarifs = lazy(() => import('./pages/public/Tarifs').then(module => ({ default: module.Tarifs })));
-const Auth = lazy(() => import('./pages/public/Auth').then(module => ({ default: module.Auth })));
-const MentionsLegales = lazy(() => import('./pages/public/MentionsLegales').then(module => ({ default: module.MentionsLegales })));
-const CGV = lazy(() => import('./pages/public/CGV').then(module => ({ default: module.CGV })));
-const Confidentialite = lazy(() => import('./pages/public/Confidentialite').then(module => ({ default: module.Confidentialite })));
+// ── Public Pages ──
+const Home = lazy(() => import('./pages/public/Home').then(m => ({ default: m.Home })));
+const Services = lazy(() => import('./pages/public/Services').then(m => ({ default: m.Services })));
+const Tarifs = lazy(() => import('./pages/public/Tarifs').then(m => ({ default: m.Tarifs })));
+const Auth = lazy(() => import('./pages/public/Auth').then(m => ({ default: m.Auth })));
+const Faq = lazy(() => import('./pages/public/Faq').then(m => ({ default: m.Faq })));
+const MentionsLegales = lazy(() => import('./pages/public/MentionsLegales').then(m => ({ default: m.MentionsLegales })));
+const CGV = lazy(() => import('./pages/public/CGV').then(m => ({ default: m.CGV })));
+const Confidentialite = lazy(() => import('./pages/public/Confidentialite').then(m => ({ default: m.Confidentialite })));
 
-// Client Pages
-const Dashboard = lazy(() => import('./pages/client/Dashboard').then(module => ({ default: module.Dashboard })));
-const WizardStep2 = lazy(() => import('./pages/client/WizardStep2').then(module => ({ default: module.WizardStep2 })));
-const WizardStep3 = lazy(() => import('./pages/client/WizardStep3').then(module => ({ default: module.WizardStep3 })));
-const WizardPayment = lazy(() => import('./pages/client/WizardPayment').then(module => ({ default: module.WizardPayment })));
+// ── Client Pages ──
+const Dashboard = lazy(() => import('./pages/client/Dashboard').then(m => ({ default: m.Dashboard })));
+const DossiersList = lazy(() => import('./pages/client/DossiersList').then(m => ({ default: m.DossiersList })));
+const DossierDetail = lazy(() => import('./pages/client/DossierDetail').then(m => ({ default: m.DossierDetail })));
 
-// Admin Pages
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
-const AdminProducts = lazy(() => import('./pages/admin/AdminProducts').then(module => ({ default: module.AdminProducts })));
+// ── Wizard Pages ──
+const WizardStep1 = lazy(() => import('./pages/client/WizardStep1').then(m => ({ default: m.WizardStep1 })));
+const WizardStep2 = lazy(() => import('./pages/client/WizardStep2').then(m => ({ default: m.WizardStep2 })));
+const WizardStep3 = lazy(() => import('./pages/client/WizardStep3').then(m => ({ default: m.WizardStep3 })));
+const WizardPayment = lazy(() => import('./pages/client/WizardPayment').then(m => ({ default: m.WizardPayment })));
 
-// Loading Fallback
+// ── Admin Pages ──
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const AdminDossiers = lazy(() => import('./pages/admin/AdminDossiers').then(m => ({ default: m.AdminDossiers })));
+const AdminProducts = lazy(() => import('./pages/admin/AdminProducts').then(m => ({ default: m.AdminProducts })));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers').then(m => ({ default: m.AdminUsers })));
+const AdminEmails = lazy(() => import('./pages/admin/AdminEmails').then(m => ({ default: m.AdminEmails })));
+const AdminFaq = lazy(() => import('./pages/admin/AdminFaq').then(m => ({ default: m.AdminFaq })));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings').then(m => ({ default: m.AdminSettings })));
+
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-slate-50">
-    <div className="animate-pulse flex flex-col items-center gap-4">
-      <div className="w-12 h-12 bg-primary/20 rounded-xl"></div>
-      <div className="h-4 w-32 bg-slate-200 rounded"></div>
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-10 h-10 gradient-primary rounded-xl flex items-center 
+        justify-center shadow-lg animate-pulse">
+        <div className="w-5 h-5 bg-white/40 rounded" />
+      </div>
+      <p className="text-sm text-slate-500 font-medium">Chargement...</p>
     </div>
   </div>
 );
@@ -44,39 +57,57 @@ export default function App() {
         <CookieBanner />
         <Suspense fallback={<PageLoader />}>
           <Routes>
-          {/* Public Routes */}
-          <Route element={<PublicLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/tarifs" element={<Tarifs />} />
-            <Route path="/mentions-legales" element={<MentionsLegales />} />
-            <Route path="/cgv" element={<CGV />} />
-            <Route path="/confidentialite" element={<Confidentialite />} />
-          </Route>
-          
-          {/* Auth Route (no header) */}
-          <Route path="/auth" element={<Auth />} />
 
-          {/* Client Protected Routes */}
-          <Route element={<ProtectedRoute requiredRole="client" />}>
-            <Route element={<ClientLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/formalite/etape-2" element={<WizardStep2 />} />
-              <Route path="/formalite/etape-3" element={<WizardStep3 />} />
-              <Route path="/formalite/paiement" element={<WizardPayment />} />
+            {/* ── Routes Publiques ── */}
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/tarifs" element={<Tarifs />} />
+              <Route path="/faq" element={<Faq />} />
+              <Route path="/mentions-legales" element={<MentionsLegales />} />
+              <Route path="/cgv" element={<CGV />} />
+              <Route path="/confidentialite" element={<Confidentialite />} />
             </Route>
-          </Route>
 
-          {/* Admin Protected Routes */}
-          <Route element={<ProtectedRoute requiredRole="admin" />}>
-            <Route element={<AdminLayout />}>
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/produits" element={<AdminProducts />} />
+            {/* ── Auth ── */}
+            <Route path="/auth" element={<Auth />} />
+
+            {/* ── Client — avec sidebar ── */}
+            <Route element={<ProtectedRoute requiredRole="client" />}>
+              <Route element={<ClientLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/dashboard/dossiers" element={<DossiersList />} />
+                <Route path="/dashboard/dossiers/:id" element={<DossierDetail />} />
+              </Route>
             </Route>
-          </Route>
-        </Routes>
-      </Suspense>
-    </Router>
+
+            {/* ── Wizard — plein écran ── */}
+            <Route element={<ProtectedRoute requiredRole="client" />}>
+              <Route element={<WizardLayout />}>
+                <Route path="/formalite" element={<WizardStep1 />} />
+                <Route path="/formalite/etape-2" element={<WizardStep2 />} />
+                <Route path="/formalite/etape-3" element={<WizardStep3 />} />
+                <Route path="/formalite/paiement" element={<WizardPayment />} />
+              </Route>
+            </Route>
+
+            {/* ── Admin ── */}
+            <Route element={<ProtectedRoute requiredRole="admin" />}>
+              <Route element={<AdminLayout />}>
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/dossiers" element={<AdminDossiers />} />
+                <Route path="/admin/dossiers/:id" element={<AdminDossiers />} />
+                <Route path="/admin/produits" element={<AdminProducts />} />
+                <Route path="/admin/utilisateurs" element={<AdminUsers />} />
+                <Route path="/admin/emails" element={<AdminEmails />} />
+                <Route path="/admin/faq" element={<AdminFaq />} />
+                <Route path="/admin/parametres" element={<AdminSettings />} />
+              </Route>
+            </Route>
+
+          </Routes>
+        </Suspense>
+      </Router>
     </ErrorBoundary>
   );
 }
