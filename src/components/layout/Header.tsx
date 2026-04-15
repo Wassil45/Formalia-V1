@@ -7,7 +7,6 @@ import { useSettings } from '../../hooks/useSettings';
 export function Header() {
   const { user, profile, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const dashboardLink = profile?.role === 'admin' ? '/admin' : '/dashboard';
 
@@ -15,12 +14,6 @@ export function Header() {
   const logoUrl = settings?.logo_url;
 
   useEffect(() => setIsMenuOpen(false), [location]);
-
-  useEffect(() => {
-    const onScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   const navLinks = [
     { to: '/', label: 'Accueil' },
@@ -33,11 +26,7 @@ export function Header() {
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   return (
-    <header className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-      isScrolled 
-        ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100' 
-        : 'bg-transparent'
-    }`}>
+    <header className="fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           

@@ -4,7 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../hooks/useSettings';
 import { 
   LayoutGrid, FolderOpen, Package, Users, Settings, 
-  LogOut, Scale, Menu, X, ChevronRight, Bell, HelpCircle, Mail
+  LogOut, Scale, Menu, X, ChevronRight, Bell, HelpCircle, Mail,
+  BarChart2, Download, UserCircle
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -14,7 +15,10 @@ const NAV_ITEMS = [
   { to: '/admin/utilisateurs', label: 'Utilisateurs', icon: Users },
   { to: '/admin/emails', label: 'Modèles emails', icon: Mail },
   { to: '/admin/faq', label: 'FAQ', icon: HelpCircle },
+  { to: '/admin/statistiques', label: 'Statistiques', icon: BarChart2 },
+  { to: '/admin/exports', label: 'Exports', icon: Download },
   { to: '/admin/parametres', label: 'Paramètres', icon: Settings },
+  { to: '/admin/account', label: 'Mon compte', icon: UserCircle },
 ];
 
 export function AdminLayout() {
@@ -108,7 +112,7 @@ export function AdminLayout() {
   );
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 overflow-hidden">
+    <div className="flex h-screen w-full bg-slate-50 overflow-hidden pt-16 md:pt-20">
 
       {/* Sidebar desktop */}
       <aside className="hidden lg:flex w-60 flex-col bg-slate-900 shrink-0 h-full">

@@ -21,6 +21,8 @@ const productSchema = z.object({
   tva_rate: z.coerce.number().min(0).max(100).default(20),
   estimated_delay_days: z.coerce.number().min(1).optional(),
   is_active: z.boolean().default(true),
+  order_index: z.coerce.number().default(0),
+  icon: z.string().default('FileText'),
   form_schema: z.any().optional(),
 });
 type ProductForm = z.infer<typeof productSchema>;
@@ -211,6 +213,24 @@ function ProductModal({
                   : <><EyeOff className="w-4 h-4" /> Masqué</>
                 }
               </button>
+            </div>
+          </div>
+
+          {/* Ordre et Icône */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1.5 block">
+                Ordre d'affichage
+              </label>
+              <input {...register('order_index')} type="number"
+                className={inputCls(false)} placeholder="0" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1.5 block">
+                Icône (Lucide)
+              </label>
+              <input {...register('icon')} type="text"
+                className={inputCls(false)} placeholder="FileText" />
             </div>
           </div>
 

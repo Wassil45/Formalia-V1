@@ -30,7 +30,7 @@ export function WizardStep3() {
 
   useEffect(() => {
     if (!canProceedToStep(3)) navigate('/formalite/etape-2');
-  }, []);
+  }, [canProceedToStep, navigate]);
 
   const uploadFile = async (file: File) => {
     if (!ACCEPTED_TYPES.includes(file.type)) {
@@ -80,6 +80,29 @@ export function WizardStep3() {
   };
 
   const canContinue = wizardData.documents.length > 0 && uploading.length === 0;
+
+  const handleContinue = async () => {
+    if (!canContinue) return;
+    
+    // Save draft
+    try {
+      if (wizardData.dossierId) {
+        await supabase
+          .from('dossiers')
+          .update({
+            form_data: {
+              companyInfo: wizardData.companyInfo,
+              documents: wizardData.documents,
+            } as any,
+          })
+          .eq('id', wizardData.dossierId);
+      }
+    } catch (err) {
+      console.error('Failed to save draft', err);
+    }
+
+    navigate('/formalite/paiement');
+  };
 
   return (
     <div className="max-w-2xl mx-auto animate-fade-in-up">
@@ -200,7 +223,7 @@ export function WizardStep3() {
           Retour
         </button>
         <button
-          onClick={() => canContinue && navigate('/formalite/paiement')}
+          onClick={handleContinue}
           disabled={!canContinue}
           className={`flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold 
             text-white transition-all ${

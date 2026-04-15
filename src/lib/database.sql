@@ -79,7 +79,9 @@ CREATE TABLE IF NOT EXISTS public.dossier_status_history (
 
 -- Settings : lecture publique, écriture admin
 ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "settings_read" ON public.settings;
 CREATE POLICY "settings_read" ON public.settings FOR SELECT USING (true);
+DROP POLICY IF EXISTS "settings_write" ON public.settings;
 CREATE POLICY "settings_write" ON public.settings FOR ALL
   USING (EXISTS (
     SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'
@@ -87,9 +89,11 @@ CREATE POLICY "settings_write" ON public.settings FOR ALL
 
 -- FAQ : lecture publique, écriture admin
 ALTER TABLE public.faq ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "faq_read" ON public.faq;
 CREATE POLICY "faq_read" ON public.faq FOR SELECT USING (is_published = true OR EXISTS (
   SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'
 ));
+DROP POLICY IF EXISTS "faq_write" ON public.faq;
 CREATE POLICY "faq_write" ON public.faq FOR ALL
   USING (EXISTS (
     SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'
@@ -97,6 +101,7 @@ CREATE POLICY "faq_write" ON public.faq FOR ALL
 
 -- Email templates : admin seulement
 ALTER TABLE public.email_templates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "email_templates_admin" ON public.email_templates;
 CREATE POLICY "email_templates_admin" ON public.email_templates FOR ALL
   USING (EXISTS (
     SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'
@@ -104,6 +109,7 @@ CREATE POLICY "email_templates_admin" ON public.email_templates FOR ALL
 
 -- Dossier messages
 ALTER TABLE public.dossier_messages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "messages_access" ON public.dossier_messages;
 CREATE POLICY "messages_access" ON public.dossier_messages FOR ALL
   USING (
     auth.uid() = sender_id OR
@@ -113,6 +119,7 @@ CREATE POLICY "messages_access" ON public.dossier_messages FOR ALL
 
 -- Dossier status history
 ALTER TABLE public.dossier_status_history ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "history_access" ON public.dossier_status_history;
 CREATE POLICY "history_access" ON public.dossier_status_history FOR ALL
   USING (
     EXISTS (SELECT 1 FROM public.dossiers WHERE id = dossier_id AND client_id = auth.uid()) OR
@@ -143,6 +150,7 @@ VALUES (
 ) ON CONFLICT (id) DO NOTHING;
 
 -- Politique : les clients peuvent uploader dans leur dossier
+DROP POLICY IF EXISTS "clients_upload" ON storage.objects;
 CREATE POLICY "clients_upload" ON storage.objects FOR INSERT
   WITH CHECK (
     bucket_id = 'dossier-documents' AND
@@ -150,6 +158,7 @@ CREATE POLICY "clients_upload" ON storage.objects FOR INSERT
   );
 
 -- Politique : les clients peuvent voir leurs propres fichiers
+DROP POLICY IF EXISTS "clients_read_own" ON storage.objects;
 CREATE POLICY "clients_read_own" ON storage.objects FOR SELECT
   USING (
     bucket_id = 'dossier-documents' AND
@@ -157,6 +166,7 @@ CREATE POLICY "clients_read_own" ON storage.objects FOR SELECT
   );
 
 -- Politique : les admins peuvent tout voir
+DROP POLICY IF EXISTS "admins_read_all" ON storage.objects;
 CREATE POLICY "admins_read_all" ON storage.objects FOR ALL
   USING (
     bucket_id = 'dossier-documents' AND
@@ -167,10 +177,12 @@ CREATE POLICY "admins_read_all" ON storage.objects FOR ALL
   );
 
 -- Politique : tout le monde peut lire les assets publics
+DROP POLICY IF EXISTS "assets_public_read" ON storage.objects;
 CREATE POLICY "assets_public_read" ON storage.objects FOR SELECT
   USING (bucket_id = 'assets');
 
 -- Politique : les admins peuvent gérer les assets
+DROP POLICY IF EXISTS "admins_manage_assets" ON storage.objects;
 CREATE POLICY "admins_manage_assets" ON storage.objects FOR ALL
   USING (
     bucket_id = 'assets' AND
@@ -213,7 +225,7 @@ INSERT INTO public.email_templates (name, slug, subject, body_html, variables) V
   'Votre dossier {{reference}} est finalisé 🎉',
   '<h1>Félicitations {{first_name}} !</h1><p>Votre dossier <strong>{{reference}}</strong> a été traité avec succès.</p><p>Vos documents officiels sont disponibles dans votre <a href="{{dashboard_url}}">espace client</a>.</p>',
   '["first_name", "reference", "dashboard_url"]'
-);
+) ON CONFLICT (slug) DO NOTHING;
 
 -- FAQ par défaut
 INSERT INTO public.faq (question, answer, category, order_index) VALUES
@@ -221,7 +233,8 @@ INSERT INTO public.faq (question, answer, category, order_index) VALUES
 ('Quels documents faut-il fournir ?', 'Les documents requis dépendent de la formalité choisie. Notre système vous guide pas à pas lors de la constitution de votre dossier.', 'documents', 2),
 ('Comment suivre l''avancement de mon dossier ?', 'Connectez-vous à votre espace client pour suivre en temps réel l''avancement de vos dossiers.', 'general', 3),
 ('Puis-je modifier mon dossier après paiement ?', 'Vous pouvez modifier votre dossier tant qu''il n''a pas été transmis au greffe. Contactez notre équipe si nécessaire.', 'general', 4),
-('Quels moyens de paiement acceptez-vous ?', 'Nous acceptons les cartes bancaires (Visa, Mastercard, American Express) via notre partenaire sécurisé Stripe.', 'paiement', 5);
+('Quels moyens de paiement acceptez-vous ?', 'Nous acceptons les cartes bancaires (Visa, Mastercard, American Express) via notre partenaire sécurisé Stripe.', 'paiement', 5)
+ON CONFLICT DO NOTHING;
 
 -- Settings par défaut
 INSERT INTO public.settings (key, value) VALUES
@@ -234,3 +247,9 @@ INSERT INTO public.settings (key, value) VALUES
 ('director_name', 'Jean Dupont'),
 ('brand_color', '#6366F1')
 ON CONFLICT (key) DO NOTHING;
+
+-- ============================================
+-- MIGRATIONS
+-- ============================================
+ALTER TABLE public.formalites_catalogue ADD COLUMN IF NOT EXISTS order_index INTEGER DEFAULT 0;
+ALTER TABLE public.formalites_catalogue ADD COLUMN IF NOT EXISTS icon TEXT DEFAULT 'FileText';

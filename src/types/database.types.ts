@@ -77,6 +77,8 @@ export interface Database {
           price_ttc: number | null
           estimated_delay_days: number | null
           is_active: boolean
+          order_index: number
+          icon: string
           form_schema: Json | null
           steps_config: Json | null
           required_documents: Json | null
@@ -93,6 +95,8 @@ export interface Database {
           price_ttc?: number | null
           estimated_delay_days?: number | null
           is_active?: boolean
+          order_index?: number
+          icon?: string
           form_schema?: Json | null
           steps_config?: Json | null
           required_documents?: Json | null
@@ -109,6 +113,8 @@ export interface Database {
           price_ttc?: number | null
           estimated_delay_days?: number | null
           is_active?: boolean
+          order_index?: number
+          icon?: string
           form_schema?: Json | null
           steps_config?: Json | null
           required_documents?: Json | null

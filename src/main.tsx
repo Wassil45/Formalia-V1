@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './components/ui/Toast';
 import { supabase } from './lib/supabase';
@@ -54,6 +55,7 @@ createRoot(document.getElementById('root')!).render(
           <App />
         </AuthProvider>
       </ToastProvider>
+      <Toaster position="bottom-right" richColors />
     </QueryClientProvider>
   </StrictMode>,
 );

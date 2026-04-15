@@ -12,6 +12,38 @@ export interface UploadResult {
   path?: string;
 }
 
+export async function getDocumentUrl(pathOrUrl: string): Promise<string> {
+  if (!isSupabaseConfigured()) return pathOrUrl;
+  
+  // Si c'est déjà une URL complète, on essaie d'extraire le chemin si c'est une URL Supabase
+  let path = pathOrUrl;
+  if (pathOrUrl.startsWith('http')) {
+    try {
+      const urlObj = new URL(pathOrUrl);
+      const pathParts = urlObj.pathname.split(`/storage/v1/object/public/${BUCKETS.DOCUMENTS}/`);
+      if (pathParts.length > 1) {
+        path = pathParts[1];
+      } else {
+        return pathOrUrl; // URL externe ou format inconnu
+      }
+    } catch (e) {
+      return pathOrUrl;
+    }
+  }
+
+  // Créer une URL signée valide 1 heure
+  const { data, error } = await supabase.storage
+    .from(BUCKETS.DOCUMENTS)
+    .createSignedUrl(path, 3600);
+    
+  if (error || !data) {
+    console.error('Erreur createSignedUrl:', error);
+    return pathOrUrl; // Fallback
+  }
+  
+  return data.signedUrl;
+}
+
 export async function uploadDocument(
   file: File,
   userId: string,

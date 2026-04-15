@@ -27,7 +27,7 @@ export function ClientLayout() {
   const initials = `${profile?.first_name?.[0] ?? ''}${profile?.last_name?.[0] ?? ''}`;
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 overflow-hidden">
+    <div className="flex h-screen w-full bg-slate-50 overflow-hidden pt-16 md:pt-20">
       
       {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 h-full bg-white border-r border-slate-100 

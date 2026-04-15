@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
+import { getDocumentUrl } from '../../lib/storage';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/ui/Toast';
+import { useSendAdminEmail } from '../../hooks/useAdmin';
 import { SkeletonRow } from '../../components/ui/Skeleton';
 import { 
   Search, Filter, Eye, MessageSquare, FileDown, 
@@ -40,6 +42,58 @@ function DossierDrawer({ dossier, onClose }: { dossier: any; onClose: () => void
   const [message, setMessage] = useState('');
   const [statusNote, setStatusNote] = useState('');
   const [showStatusChange, setShowStatusChange] = useState<string | false>(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+
+  // Fetch email templates
+  const { data: emailTemplates } = useQuery<any[]>({
+    queryKey: ['email_templates'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('email_templates')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const sendEmailMutation = useSendAdminEmail();
+
+  const handleSendTemplate = async () => {
+    if (!selectedTemplate) return;
+    const template = emailTemplates?.find(t => t.id === selectedTemplate);
+    if (!template) return;
+
+    try {
+      // Replace variables in body
+      let body = template.body_html;
+      const variables = {
+        first_name: dossier.profiles?.first_name || '',
+        reference: dossier.reference,
+        formalite_name: dossier.formalites_catalogue?.name || '',
+        dashboard_url: `${window.location.origin}/dashboard/dossiers/${dossier.id}`,
+        dossier_url: `${window.location.origin}/dashboard/dossiers/${dossier.id}`,
+        delay_days: dossier.formalites_catalogue?.estimated_delay_days || '3',
+        documents_list: documents.map((d: any) => `<li>${d.name}</li>`).join('')
+      };
+
+      Object.entries(variables).forEach(([key, value]) => {
+        body = body.replace(new RegExp(`{{${key}}}`, 'g'), String(value));
+      });
+
+      await sendEmailMutation.mutateAsync({
+        to: dossier.profiles?.email || '',
+        subject: template.subject.replace(/{{reference}}/g, dossier.reference),
+        body
+      });
+      
+      toast('success', 'Email envoyé', `Le modèle "${template.name}" a été envoyé.`);
+      setSelectedTemplate('');
+    } catch (err: any) {
+      toast('error', 'Erreur', err.message);
+    }
+  };
 
   // Fetch les messages du dossier
   const { data: messages, isLoading: messagesLoading } = useQuery({
@@ -134,9 +188,18 @@ function DossierDrawer({ dossier, onClose }: { dossier: any; onClose: () => void
 
   const currentStatusConfig = STATUS_CONFIG[dossier.status];
   const StatusIcon = currentStatusConfig?.icon ?? Clock;
-  const availableNextStatuses = STATUS_FLOW[dossier.status as keyof typeof STATUS_FLOW]?.next ?? [];
+  const availableNextStatuses = Object.keys(STATUS_CONFIG).filter(s => s !== dossier.status);
   const formData = dossier.form_data as any;
   const documents = formData?.documents ?? [];
+
+  const handleDownload = async (url: string) => {
+    try {
+      const signedUrl = await getDocumentUrl(url);
+      window.open(signedUrl, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      toast('error', 'Erreur', 'Impossible d\'ouvrir le document');
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -218,11 +281,11 @@ function DossierDrawer({ dossier, onClose }: { dossier: any; onClose: () => void
                     rounded-xl border border-slate-100">
                     <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
                     <span className="text-sm text-slate-700 flex-1 truncate">{doc.name}</span>
-                    <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                    <button onClick={() => handleDownload(doc.url)}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-primary 
                         hover:bg-primary/8 transition-all">
                       <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
+                    </button>
                   </div>
                 ))}
               </div>
@@ -330,6 +393,36 @@ function DossierDrawer({ dossier, onClose }: { dossier: any; onClose: () => void
               </div>
             </div>
           )}
+
+          {/* Envoi d'email */}
+          <div className="p-6 border-b border-slate-50">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">
+              Envoyer un email
+            </h3>
+            <div className="flex gap-2">
+              <select
+                value={selectedTemplate}
+                onChange={(e) => setSelectedTemplate(e.target.value)}
+                className="flex-1 px-3.5 py-2.5 text-sm border border-slate-200 
+                  rounded-xl focus:outline-none focus:border-primary 
+                  focus:ring-2 focus:ring-primary/10 transition-all bg-white"
+              >
+                <option value="">Sélectionner un modèle...</option>
+                {emailTemplates?.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleSendTemplate}
+                disabled={!selectedTemplate || sendEmailMutation.isPending}
+                className="px-4 py-2.5 rounded-xl text-sm font-bold text-white 
+                  transition-all disabled:opacity-60 gradient-primary shadow-md flex items-center gap-2"
+              >
+                {sendEmailMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                Envoyer
+              </button>
+            </div>
+          </div>
 
           {/* Messagerie */}
           <div className="p-6">

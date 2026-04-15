@@ -20,7 +20,7 @@ export function WizardPayment() {
 
   useEffect(() => {
     if (!canProceedToStep(4)) navigate('/formalite/etape-3');
-  }, []);
+  }, [canProceedToStep, navigate]);
 
   const prixHT = wizardData.formalitePriceHT ?? 0;
   const tauxTVA = wizardData.formaliteTvaRate ?? 20;
@@ -34,46 +34,63 @@ export function WizardPayment() {
   const handlePayment = async () => {
     setIsProcessing(true);
     try {
-      // 1. Créer le dossier en DB
-      const { data: dossier, error } = await supabase
-        .from('dossiers')
-        .insert({
-          reference: 'DOS-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
-          client_id: user!.id,
-          formalite_id: wizardData.formaliteId!,
-          status: 'draft',
-          form_data: {
-            companyInfo: wizardData.companyInfo,
-            documents: wizardData.documents.map(d => ({ name: d.name, url: d.url })),
-          } as any,
-          total_amount: totalTTC,
-        })
-        .select()
-        .single();
+      let currentDossierId = wizardData.dossierId;
 
-      if (error) throw error;
-      setDossierId((dossier as any).id);
+      // 1. Créer ou mettre à jour le dossier en DB
+      if (currentDossierId) {
+        const { error } = await supabase
+          .from('dossiers')
+          .update({
+            formalite_id: wizardData.formaliteId!,
+            form_data: {
+              companyInfo: wizardData.companyInfo,
+              documents: wizardData.documents,
+            } as any,
+            total_amount: totalTTC,
+          })
+          .eq('id', currentDossierId);
+        if (error) throw error;
+      } else {
+        const { data: dossier, error } = await supabase
+          .from('dossiers')
+          .insert({
+            reference: 'DOS-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+            client_id: user!.id,
+            formalite_id: wizardData.formaliteId!,
+            status: 'draft',
+            form_data: {
+              companyInfo: wizardData.companyInfo,
+              documents: wizardData.documents,
+            } as any,
+            total_amount: totalTTC,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        currentDossierId = (dossier as any).id;
+        setDossierId(currentDossierId!);
+      }
 
       // 2. Créer session Stripe Checkout
       const response = await fetch('/api/payments/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          dossierId: (dossier as any).id, 
+          dossierId: currentDossierId, 
           formaliteId: wizardData.formaliteId,
-          successUrl: window.location.origin + '/dashboard?payment=success',
-          cancelUrl: window.location.origin + '/dashboard?payment=cancel'
+          successUrl: window.location.origin + '/dashboard/confirmation?session_id={CHECKOUT_SESSION_ID}',
+          cancelUrl: window.location.origin + '/dashboard/dossiers/' + currentDossierId
         })
       });
       
+      const data = await response.json();
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de la création de la session de paiement');
+        throw new Error(data.error || 'Erreur lors de la création de la session de paiement');
       }
 
-      const { url } = await response.json();
-      if (url) {
-        window.location.href = url;
+      if (data.url) {
+        window.location.href = data.url;
       } else {
         throw new Error('URL de paiement non reçue');
       }

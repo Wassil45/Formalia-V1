@@ -1,5 +1,5 @@
 import { useReducer, useEffect, useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, getSafeSession } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
@@ -103,31 +103,50 @@ export function FormaliteWizard() {
     staleTime: 5 * 60 * 1000
   });
 
-  // Fetch active draft
+  const [searchParams] = useSearchParams();
+  const editDossierId = searchParams.get('dossierId');
+
+  // Fetch active draft or specific dossier
   const { data: draft, isLoading: isLoadingDraft } = useQuery({
-    queryKey: ['draft_dossier', user?.id],
+    queryKey: ['draft_dossier', user?.id, editDossierId],
     queryFn: async () => {
       if (!user) return null;
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from('dossiers')
         .select('*, formalites_catalogue(*)')
-        .eq('client_id', user.id)
-        .eq('status', 'draft')
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .eq('client_id', user.id);
+
+      if (editDossierId) {
+        query = query.eq('id', editDossierId);
+      } else {
+        query = query.eq('status', 'draft').order('updated_at', { ascending: false }).limit(1);
+      }
+
+      const { data, error } = await query.maybeSingle();
       if (error) throw error;
-      return data;
+      return data as any;
     },
     enabled: !!user && state.currentStep === 1
   });
 
   // Initialize from draft
   useEffect(() => {
-    if (draft && !state.dossierId && state.currentStep === 1) {
-      // We don't auto-select, we let user choose to resume
+    if (draft && editDossierId && !state.dossierId && state.currentStep === 1) {
+      // Auto-resume if editDossierId is provided
+      dispatch({ 
+        type: 'SELECT_FORMALITE', 
+        payload: { 
+          formalite: draft.formalites_catalogue as any, 
+          reference: draft.reference, 
+          dossierId: draft.id,
+          formData: draft.form_data || {}
+        } 
+      });
+      reset((draft.form_data as Record<string, unknown>) || {});
+      dispatch({ type: 'SET_STEP', payload: 2 });
     }
-  }, [draft, state.dossierId, state.currentStep]);
+  }, [draft, editDossierId, state.dossierId, state.currentStep, reset]);
 
   // Sync form data to state
   const watchedFields = watch();

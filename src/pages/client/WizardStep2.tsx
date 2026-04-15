@@ -14,7 +14,7 @@ export function WizardStep2() {
 
   useEffect(() => {
     if (!canProceedToStep(2)) navigate('/formalite');
-  }, []);
+  }, [canProceedToStep, navigate]);
 
   // Fetch le form_schema de la formalité sélectionnée
   const { data: formalite, isLoading } = useQuery({
@@ -44,25 +44,48 @@ export function WizardStep2() {
   const currentSchemaStepData = schemaSteps[currentSchemaStep];
   const isLastSchemaStep = currentSchemaStep >= schemaSteps.length - 1;
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     if (!isLastSchemaStep && hasCustomForm) {
       setCurrentSchemaStep(s => s + 1);
       return;
     }
     setCompanyInfo(data);
+
+    // Save draft
+    try {
+      if (wizardData.dossierId) {
+        await supabase
+          .from('dossiers')
+          .update({
+            form_data: {
+              companyInfo: data,
+              documents: wizardData.documents,
+            } as any,
+            status: 'pending_documents'
+          })
+          .eq('id', wizardData.dossierId);
+      }
+    } catch (err) {
+      console.error('Failed to save draft', err);
+    }
+
     navigate('/formalite/etape-3');
   };
 
   const renderField = (field: any) => {
-    const inputCls = `w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white 
-      text-sm focus:outline-none focus:border-primary focus:ring-2 
-      focus:ring-primary/10 transition-all`;
+    const hasError = !!errors[field.name];
+    const inputCls = `w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all ${
+      hasError 
+        ? 'border-red-300 bg-red-50/50 focus:border-red-400 focus:ring-red-100' 
+        : 'border-slate-200 bg-white focus:border-primary focus:ring-primary/10'
+    }`;
+    const reqRule = field.required ? 'Ce champ est requis' : false;
 
     switch (field.type) {
       case 'textarea':
         return (
           <textarea
-            {...register(field.name, { required: field.required })}
+            {...register(field.name, { required: reqRule })}
             rows={3}
             placeholder={field.placeholder}
             className={`${inputCls} resize-none`}
@@ -70,7 +93,7 @@ export function WizardStep2() {
         );
       case 'select':
         return (
-          <select {...register(field.name, { required: field.required })} className={inputCls}>
+          <select {...register(field.name, { required: reqRule })} className={inputCls}>
             <option value="">Sélectionner...</option>
             {field.options?.map((o: any) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -83,7 +106,7 @@ export function WizardStep2() {
             {field.options?.map((o: any) => (
               <label key={o.value} className="flex items-center gap-2.5 cursor-pointer group">
                 <input
-                  {...register(field.name, { required: field.required })}
+                  {...register(field.name, { required: reqRule })}
                   type="radio"
                   value={o.value}
                   className="w-4 h-4 accent-primary"
@@ -114,7 +137,7 @@ export function WizardStep2() {
         return (
           <input
             type="file"
-            {...register(field.name, { required: field.required })}
+            {...register(field.name, { required: reqRule })}
             className="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 
               file:rounded-xl file:border-0 file:text-sm file:font-medium 
               file:bg-primary/8 file:text-primary hover:file:bg-primary/15 
@@ -124,7 +147,7 @@ export function WizardStep2() {
       default:
         return (
           <input
-            {...register(field.name, { required: field.required })}
+            {...register(field.name, { required: reqRule })}
             type={field.type}
             placeholder={field.placeholder}
             className={inputCls}
@@ -143,7 +166,7 @@ export function WizardStep2() {
 
   // Si pas de form_schema configuré → formulaire par défaut
   if (!hasCustomForm) {
-    return <DefaultCompanyForm onSubmit={(data) => { setCompanyInfo(data); navigate('/formalite/etape-3'); }} defaultValues={wizardData.companyInfo} />;
+    return <DefaultCompanyForm onSubmit={onSubmit} defaultValues={wizardData.companyInfo} />;
   }
 
   return (
@@ -219,7 +242,10 @@ const defaultSchema = z.object({
   denomination: z.string().min(1, 'La dénomination sociale est requise'),
   sigle: z.string().optional(),
   objetSocial: z.string().min(20, 'Décrivez l\'activité en au moins 20 caractères'),
-  capitalSocial: z.coerce.number().min(1, 'Capital social requis (minimum 1€)').optional(),
+  capitalSocial: z.preprocess(
+    (val) => (val === '' || val === undefined || val === null ? undefined : Number(val)),
+    z.number().min(1, 'Capital social requis (minimum 1€)').optional()
+  ),
   adresse: z.string().min(5, 'Adresse complète requise'),
   codePostal: z.string().regex(/^\d{5}$/, 'Code postal invalide (5 chiffres)'),
   ville: z.string().min(1, 'Ville requise'),

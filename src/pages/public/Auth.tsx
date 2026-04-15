@@ -81,7 +81,7 @@ export function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex pt-16 md:pt-20">
       {/* Panel gauche — branding */}
       <div className="hidden lg:flex w-[45%] flex-col justify-between p-12 
         bg-gradient-to-br from-slate-900 via-[#1a1a3a] to-primary relative overflow-hidden">

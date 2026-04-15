@@ -10,7 +10,7 @@ import {
   MessageSquare, History, ExternalLink, Plus
 } from 'lucide-react';
 
-import { uploadDocument as uploadDocumentHelper } from '../../lib/storage';
+import { uploadDocument as uploadDocumentHelper, getDocumentUrl } from '../../lib/storage';
 
 const STATUS_CONFIG = {
   draft: { label: 'Brouillon', color: 'text-slate-600', bg: 'bg-slate-100', 
@@ -37,6 +37,8 @@ export function DossierDetail() {
   const [message, setMessage] = useState('');
   const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
 
+  const [isPaying, setIsPaying] = useState(false);
+
   // Fetch le dossier
   const { data: dossier, isLoading } = useQuery({
     queryKey: ['dossier_detail', id],
@@ -52,6 +54,39 @@ export function DossierDetail() {
       return data as any;
     },
   });
+
+  const handlePayment = async () => {
+    try {
+      setIsPaying(true);
+      
+      const response = await fetch('/api/payments/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dossierId: dossier.id,
+          formaliteId: dossier.formalite_id,
+          successUrl: `${window.location.origin}/dashboard/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${window.location.origin}/dashboard/dossiers/${dossier.id}`
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors de la création de la session de paiement');
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('Erreur lors de la création de la session de paiement');
+      }
+    } catch (err: unknown) {
+      console.error('Payment error:', err);
+      toast('error', 'Erreur', err instanceof Error ? err.message : 'Une erreur est survenue');
+    } finally {
+      setIsPaying(false);
+    }
+  };
 
   // Fetch les messages
   const { data: messages } = useQuery({
@@ -114,9 +149,10 @@ export function DossierDetail() {
       .update({
         form_data: {
           ...dossier?.form_data as any,
-          documents: [...currentDocs, { name: file.name, url: result.url! }]
+          documents: [...currentDocs, { name: file.name, url: result.path || result.url! }]
         }
       })
+      .eq('client_id', user!.id)
       .eq('id', id!);
 
     if (updateError) {
@@ -172,6 +208,15 @@ export function DossierDetail() {
   const formData = dossier.form_data as any;
   const documents = formData?.documents ?? [];
 
+  const handleDownload = async (url: string) => {
+    try {
+      const signedUrl = await getDocumentUrl(url);
+      window.open(signedUrl, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      toast('error', 'Erreur', 'Impossible d\'ouvrir le document');
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
       {/* Header */}
@@ -194,6 +239,28 @@ export function DossierDetail() {
             <p className="text-sm text-slate-500 truncate">
               {(dossier.formalites_catalogue as any)?.name}
             </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {(dossier.status === 'draft' || dossier.status === 'pending_documents') && (
+              <button
+                onClick={() => navigate(`/formalite?dossierId=${dossier.id}`)}
+                className="px-4 py-2 rounded-xl text-sm font-bold text-slate-700 bg-slate-100
+                  transition-all hover:bg-slate-200"
+              >
+                Modifier
+              </button>
+            )}
+            {dossier.stripe_payment_status !== 'paid' && dossier.stripe_payment_status !== 'succeeded' && (
+              <button
+                onClick={handlePayment}
+                disabled={isPaying}
+                className="px-4 py-2 rounded-xl text-sm font-bold text-white 
+                  transition-all gradient-primary shadow-md hover:shadow-lg disabled:opacity-60 flex items-center gap-2"
+              >
+                {isPaying ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                Payer {dossier.total_amount ? `${dossier.total_amount} €` : ''}
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -272,10 +339,10 @@ export function DossierDetail() {
                   rounded-xl border border-slate-100">
                   <File className="w-4 h-4 text-slate-400 flex-shrink-0" />
                   <span className="text-sm text-slate-700 flex-1 truncate">{doc.name}</span>
-                  <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                  <button onClick={() => handleDownload(doc.url)}
                     className="p-1 rounded-lg text-slate-400 hover:text-primary transition-colors">
                     <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                  </button>
                 </div>
               ))}
               {uploadingFiles.map(fid => (

@@ -4,13 +4,15 @@ import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import Stripe from 'stripe';
+import path from "path";
+import fs from "fs";
 import adminUsersRouter from "./server/routes/admin-users.ts";
 import { requireAdmin } from "./server/middleware/auth.ts";
 
 dotenv.config();
 
 const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-02-24-preview' as any }) 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' as any }) 
   : null;
 
 async function startServer() {
@@ -92,7 +94,7 @@ async function startServer() {
       if (dossierError || !dossier) throw new Error('Dossier non trouvé');
 
       const formalite = dossier.formalites_catalogue;
-      const amount = formalite.price_ttc || formalite.price_ht * (1 + formalite.tva_rate / 100);
+      const amount = dossier.total_amount || formalite.price_ttc || formalite.price_ht * (1 + formalite.tva_rate / 100);
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -298,8 +300,16 @@ async function startServer() {
     });
   });
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
+  // Serve static files if dist exists, otherwise use Vite dev server
+  const distPath = path.join(import.meta.dirname, 'dist');
+  const hasDist = fs.existsSync(distPath);
+
+  if (hasDist) {
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  } else {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",

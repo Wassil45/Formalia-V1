@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 
 export interface CompanyInfo {
   denomination?: string;
@@ -40,6 +40,7 @@ interface WizardContextType {
   setCompanyInfo: (info: CompanyInfo) => void;
   addDocument: (doc: WizardDocument) => void;
   removeDocument: (id: string) => void;
+  setDocuments: (docs: WizardDocument[]) => void;
   setDossierId: (id: string) => void;
   resetWizard: () => void;
   canProceedToStep: (step: number) => boolean;
@@ -56,38 +57,41 @@ const WizardContext = createContext<WizardContextType | undefined>(undefined);
 export function WizardProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<WizardData>(initialData);
 
-  const setFormalite = (f: { id: string; name: string; type: string; price_ht: number; tva_rate: number }) =>
+  const setFormalite = useCallback((f: { id: string; name: string; type: string; price_ht: number; tva_rate: number }) =>
     setData(prev => ({ 
       ...prev, formaliteId: f.id, formaliteName: f.name, 
       formaliteType: f.type, formalitePriceHT: f.price_ht, formaliteTvaRate: f.tva_rate 
-    }));
+    })), []);
 
-  const setCompanyInfo = (info: CompanyInfo) =>
-    setData(prev => ({ ...prev, companyInfo: info }));
+  const setCompanyInfo = useCallback((info: CompanyInfo) =>
+    setData(prev => ({ ...prev, companyInfo: info })), []);
 
-  const addDocument = (doc: WizardDocument) =>
-    setData(prev => ({ ...prev, documents: [...prev.documents, doc] }));
+  const addDocument = useCallback((doc: WizardDocument) =>
+    setData(prev => ({ ...prev, documents: [...prev.documents, doc] })), []);
 
-  const removeDocument = (id: string) =>
-    setData(prev => ({ ...prev, documents: prev.documents.filter(d => d.id !== id) }));
+  const removeDocument = useCallback((id: string) =>
+    setData(prev => ({ ...prev, documents: prev.documents.filter(d => d.id !== id) })), []);
 
-  const setDossierId = (id: string) =>
-    setData(prev => ({ ...prev, dossierId: id }));
+  const setDocuments = useCallback((docs: WizardDocument[]) =>
+    setData(prev => ({ ...prev, documents: docs })), []);
 
-  const resetWizard = () => setData(initialData);
+  const setDossierId = useCallback((id: string) =>
+    setData(prev => ({ ...prev, dossierId: id })), []);
 
-  const canProceedToStep = (step: number) => {
+  const resetWizard = useCallback(() => setData(initialData), []);
+
+  const canProceedToStep = useCallback((step: number) => {
     if (step <= 1) return true;
     if (step === 2) return !!data.formaliteId;
     if (step === 3) return !!data.companyInfo;
     if (step === 4) return data.documents.length > 0;
     return false;
-  };
+  }, [data]);
 
   return (
     <WizardContext.Provider value={{
       data, setFormalite, setCompanyInfo, addDocument,
-      removeDocument, setDossierId, resetWizard, canProceedToStep
+      removeDocument, setDocuments, setDossierId, resetWizard, canProceedToStep
     }}>
       {children}
     </WizardContext.Provider>

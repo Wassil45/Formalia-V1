@@ -1,11 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
+import { getDocumentUrl } from '../../lib/storage';
 import { useAuth } from '../../context/AuthContext';
 import { FileText, Download, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useToast } from '../../components/ui/Toast';
 
 export function ClientDocuments() {
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const { data: dossiers, isLoading } = useQuery({
     queryKey: ['client_documents', user?.id],
@@ -39,6 +42,15 @@ export function ClientDocuments() {
     }));
   }) || [];
 
+  const handleDownload = async (url: string) => {
+    try {
+      const signedUrl = await getDocumentUrl(url);
+      window.open(signedUrl, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      toast('error', 'Erreur', 'Impossible d\'ouvrir le document');
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 space-y-6">
       <div className="flex items-center justify-between mb-2">
@@ -70,15 +82,13 @@ export function ClientDocuments() {
                 <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
                   <FileText className="w-5 h-5 text-primary" />
                 </div>
-                <a 
-                  href={doc.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                <button 
+                  onClick={() => handleDownload(doc.url)}
                   className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                   title="Télécharger"
                 >
                   <Download className="w-5 h-5" />
-                </a>
+                </button>
               </div>
               
               <div>

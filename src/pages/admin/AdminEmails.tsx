@@ -28,8 +28,10 @@ function TemplateEditor({
   const [subject, setSubject] = useState(template.subject);
   const [bodyHtml, setBodyHtml] = useState(template.body_html);
   const [preview, setPreview] = useState(false);
+  const variables = Array.isArray(template.variables) ? template.variables : [];
+  
   const [testValues, setTestValues] = useState<Record<string, string>>(
-    Object.fromEntries(template.variables.map(v => [v, `[${v}]`]))
+    Object.fromEntries(variables.map(v => [v, `[${v}]`]))
   );
 
   const updateTemplate = useMutation({
@@ -53,10 +55,10 @@ function TemplateEditor({
   });
 
   // Prévisualisation : remplace les variables par les valeurs de test
-  const previewSubject = template.variables.reduce(
+  const previewSubject = variables.reduce(
     (s, v) => s.replace(new RegExp(`{{${v}}}`, 'g'), testValues[v] || `[${v}]`), subject
   );
-  const previewBody = template.variables.reduce(
+  const previewBody = variables.reduce(
     (s, v) => s.replace(new RegExp(`{{${v}}}`, 'g'), testValues[v] || `[${v}]`), bodyHtml
   );
 
@@ -159,7 +161,7 @@ function TemplateEditor({
               <h3 className="text-sm font-semibold text-slate-700">Variables</h3>
             </div>
             <div className="space-y-3">
-              {template.variables.map(variable => (
+              {variables.map(variable => (
                 <div key={variable}>
                   <div className="flex items-center justify-between mb-1">
                     <code className="text-xs font-mono text-primary bg-primary/8 
@@ -227,7 +229,23 @@ export function AdminEmails() {
         .select('*')
         .order('created_at');
       if (error) throw error;
-      return (data ?? []) as EmailTemplate[];
+      
+      return (data ?? []).map((t: any) => {
+        let parsedVariables: string[] = [];
+        if (Array.isArray(t.variables)) {
+          parsedVariables = t.variables;
+        } else if (typeof t.variables === 'string') {
+          try {
+            parsedVariables = JSON.parse(t.variables);
+          } catch (e) {
+            parsedVariables = [];
+          }
+        }
+        return {
+          ...t,
+          variables: parsedVariables
+        };
+      }) as EmailTemplate[];
     },
   });
 

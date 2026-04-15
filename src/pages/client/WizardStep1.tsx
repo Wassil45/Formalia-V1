@@ -1,12 +1,13 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { MOCK_SERVICES } from '../../data/mockServices';
 import { useWizard } from '../../context/WizardContext';
 import { Building2, RefreshCw, XCircle, CheckCircle2, 
-  Clock, ArrowRight, AlertTriangle, Info } from 'lucide-react';
+  Clock, ArrowRight, AlertTriangle, Info, Loader2 } from 'lucide-react';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { useAuth } from '../../context/AuthContext';
 
 const TYPE_CONFIG = {
   immatriculation: {
@@ -37,10 +38,62 @@ const TYPE_CONFIG = {
 
 export function WizardStep1() {
   const navigate = useNavigate();
-  const { setFormalite } = useWizard();
+  const [searchParams] = useSearchParams();
+  const dossierId = searchParams.get('dossierId');
+  const { user } = useAuth();
+  
+  const { setFormalite, setDossierId, setCompanyInfo, setDocuments, data: wizardData } = useWizard();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const { data: services, isLoading, isError } = useQuery<any[]>({
+  // Fetch dossier if dossierId is present
+  const { data: dossier, isLoading: isLoadingDossier } = useQuery({
+    queryKey: ['dossier_resume', dossierId],
+    enabled: !!dossierId && !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('dossiers')
+        .select('*, formalites_catalogue(*)')
+        .eq('id', dossierId!)
+        .eq('client_id', user!.id)
+        .single();
+      if (error) throw error;
+      return data as any;
+    }
+  });
+
+  // Auto-resume logic
+  useEffect(() => {
+    if (dossier && dossierId) {
+      const formalite = dossier.formalites_catalogue;
+      if (formalite) {
+        setFormalite({
+          id: formalite.id,
+          name: formalite.name,
+          type: formalite.type,
+          price_ht: formalite.price_ht,
+          tva_rate: formalite.tva_rate,
+        });
+        setSelectedId(formalite.id);
+      }
+      setDossierId(dossier.id);
+      if (dossier.form_data && (dossier.form_data as any).companyInfo) {
+        setCompanyInfo((dossier.form_data as any).companyInfo);
+      }
+      if (dossier.form_data && (dossier.form_data as any).documents) {
+        setDocuments((dossier.form_data as any).documents);
+      }
+      // Auto-navigate to correct step
+      if (formalite) {
+        if (dossier.status === 'pending_documents') {
+          navigate('/formalite/etape-3', { replace: true });
+        } else {
+          navigate('/formalite/etape-2', { replace: true });
+        }
+      }
+    }
+  }, [dossier, dossierId, setFormalite, setDossierId, setCompanyInfo, setDocuments, navigate]);
+
+  const { data: services, isLoading: isLoadingServices, isError } = useQuery<any[]>({
     queryKey: ['formalites_wizard'],
     queryFn: async () => {
       // Si Supabase n'est pas configuré, retourner les données mock
@@ -70,6 +123,8 @@ export function WizardStep1() {
     // Ne pas afficher d'erreur si on a des données mock
     retry: false,
   });
+
+  const isLoading = isLoadingServices || isLoadingDossier;
 
   const handleContinue = () => {
     const selected = services?.find(s => s.id === selectedId);

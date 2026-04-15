@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Header } from './components/layout/Header';
 import { PublicLayout } from './components/layout/PublicLayout';
 import { ClientLayout } from './components/layout/ClientLayout';
 import { AdminLayout } from './components/layout/AdminLayout';
@@ -22,6 +23,10 @@ const Confidentialite = lazy(() => import('./pages/public/Confidentialite').then
 const Dashboard = lazy(() => import('./pages/client/Dashboard').then(m => ({ default: m.Dashboard })));
 const DossiersList = lazy(() => import('./pages/client/DossiersList').then(m => ({ default: m.DossiersList })));
 const DossierDetail = lazy(() => import('./pages/client/DossierDetail').then(m => ({ default: m.DossierDetail })));
+const ClientDocuments = lazy(() => import('./pages/client/ClientDocuments').then(m => ({ default: m.ClientDocuments })));
+const ClientPayments = lazy(() => import('./pages/client/ClientPayments').then(m => ({ default: m.ClientPayments })));
+const ClientSettings = lazy(() => import('./pages/client/ClientSettings').then(m => ({ default: m.ClientSettings })));
+const ConfirmationPage = lazy(() => import('./pages/client/ConfirmationPage').then(m => ({ default: m.ConfirmationPage })));
 
 // ── Wizard Pages ──
 const WizardStep1 = lazy(() => import('./pages/client/WizardStep1').then(m => ({ default: m.WizardStep1 })));
@@ -37,6 +42,9 @@ const AdminUsers = lazy(() => import('./pages/admin/AdminUsers').then(m => ({ de
 const AdminEmails = lazy(() => import('./pages/admin/AdminEmails').then(m => ({ default: m.AdminEmails })));
 const AdminFaq = lazy(() => import('./pages/admin/AdminFaq').then(m => ({ default: m.AdminFaq })));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings').then(m => ({ default: m.AdminSettings })));
+const AdminStatistics = lazy(() => import('./pages/admin/AdminStatistics').then(m => ({ default: m.AdminStatistics })));
+const AdminExports = lazy(() => import('./pages/admin/AdminExports').then(m => ({ default: m.AdminExports })));
+const AdminAccount = lazy(() => import('./pages/admin/AdminAccount').then(m => ({ default: m.AdminAccount })));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -55,6 +63,7 @@ export default function App() {
     <ErrorBoundary>
       <Router>
         <CookieBanner />
+        <Header />
         <Suspense fallback={<PageLoader />}>
           <Routes>
 
@@ -78,6 +87,10 @@ export default function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/dashboard/dossiers" element={<DossiersList />} />
                 <Route path="/dashboard/dossiers/:id" element={<DossierDetail />} />
+                <Route path="/dashboard/documents" element={<ClientDocuments />} />
+                <Route path="/dashboard/facturation" element={<ClientPayments />} />
+                <Route path="/dashboard/parametres" element={<ClientSettings />} />
+                <Route path="/dashboard/confirmation" element={<ConfirmationPage />} />
               </Route>
             </Route>
 
@@ -102,6 +115,9 @@ export default function App() {
                 <Route path="/admin/emails" element={<AdminEmails />} />
                 <Route path="/admin/faq" element={<AdminFaq />} />
                 <Route path="/admin/parametres" element={<AdminSettings />} />
+                <Route path="/admin/statistiques" element={<AdminStatistics />} />
+                <Route path="/admin/exports" element={<AdminExports />} />
+                <Route path="/admin/account" element={<AdminAccount />} />
               </Route>
             </Route>
 

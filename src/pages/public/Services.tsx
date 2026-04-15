@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { MOCK_SERVICES } from '../../data/mockServices';
 import { Link } from 'react-router-dom';
+import * as Icons from 'lucide-react';
 import { ArrowRight, Clock, ShieldCheck, Zap, Star, FileText, CheckCircle2, Sparkles, Info } from 'lucide-react';
 
 const TYPE_COLORS: Record<string, { border: string, glow: string, badge: string, text: string }> = {
@@ -18,7 +19,7 @@ export function Services() {
       // Si Supabase n'est pas configuré, retourner les données mock
       if (!isSupabaseConfigured()) {
         console.warn('Supabase non configuré — données de démonstration utilisées');
-        return MOCK_SERVICES;
+        return [...MOCK_SERVICES].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
       }
       
       try {
@@ -26,17 +27,18 @@ export function Services() {
           .from('formalites_catalogue')
           .select('*')
           .eq('is_active', true)
+          .order('order_index', { ascending: true })
           .order('price_ht', { ascending: true });
         
         if (error) {
           console.error('Erreur Supabase:', error);
           // Fallback sur les données mock en cas d'erreur
-          return MOCK_SERVICES;
+          return [...MOCK_SERVICES].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
         }
-        return data && data.length > 0 ? data : MOCK_SERVICES;
+        return data && data.length > 0 ? data : [...MOCK_SERVICES].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
       } catch (err) {
         console.error('Erreur réseau:', err);
-        return MOCK_SERVICES;
+        return [...MOCK_SERVICES].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
       }
     },
     // Ne pas afficher d'erreur si on a des données mock
@@ -99,61 +101,101 @@ export function Services() {
             <p className="text-slate-500">Aucun service disponible pour le moment.</p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services?.map((service, idx) => {
-              const typeStyle = TYPE_COLORS[service.category?.toLowerCase()] || TYPE_COLORS.default;
-              const isPopular = service.name.toLowerCase().includes('immatriculation');
-              const priceTTC = service.price_ttc ?? (service.price_ht * (1 + (service.tva_rate || 20) / 100));
+          <div className="space-y-24">
+            {['immatriculation', 'modification', 'radiation'].map(type => {
+              const typeServices = services?.filter(s => s.type === type).sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+              if (!typeServices || typeServices.length === 0) return null;
+
+              const typeTitle = {
+                immatriculation: 'Création d\'entreprise',
+                modification: 'Modification statutaire',
+                radiation: 'Fermeture d\'entreprise'
+              }[type];
 
               return (
-                <div 
-                  key={service.id}
-                  className={`relative bg-white rounded-2xl p-6 border border-slate-100 shadow-sm transition-all duration-300 hover:-translate-y-1 ${typeStyle.border} border-l-4 ${typeStyle.glow} animate-fade-in-up flex flex-col`}
-                  style={{ animationDelay: `${idx * 0.1}s` }}
-                >
-                  {isPopular && (
-                    <div className="absolute -top-3 -right-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" />
-                      Populaire
-                    </div>
-                  )}
-                  
-                  <div className="mb-4">
-                    <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold mb-3 uppercase tracking-wider ${typeStyle.badge}`}>
-                      {service.category}
-                    </span>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2 leading-tight">
-                      {service.name}
-                    </h3>
-                    <p className="text-sm text-slate-500 line-clamp-2 min-h-[2.5rem]">
-                      {service.description}
-                    </p>
+                <div key={type} className="space-y-12">
+                  <div className="text-center">
+                    <h2 className="text-3xl font-bold text-slate-900">{typeTitle}</h2>
+                    <div className="w-16 h-1 bg-primary mx-auto mt-4 rounded-full"></div>
                   </div>
+                  
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
+                    {typeServices.map((service, idx) => {
+                      // On met en avant le 2ème élément (index 1) ou celui qui a isPopular
+                      const isHighlighted = idx === 1 || (typeServices.length === 1 && service.name.toLowerCase().includes('premium'));
+                      const priceTTC = service.price_ttc ?? (service.price_ht * (1 + (service.tva_rate || 20) / 100));
+                      
+                      // Séparer la description en liste de fonctionnalités (par retour à la ligne ou point)
+                      const features = service.description?.split(/\n|\. /).filter((f: string) => f.trim().length > 0) || [];
+                      
+                      const IconComponent = service.icon && (Icons as any)[service.icon] ? (Icons as any)[service.icon] : null;
 
-                  <div className="mt-auto pt-6 border-t border-slate-50 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-sm text-slate-600 font-medium">
-                        <Clock className="w-4 h-4" />
-                        {service.estimated_days} jours
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-black text-slate-900">
-                          {priceTTC.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
-                        </div>
-                        <div className="text-xs text-slate-400 font-medium">
-                          soit {service.price_ht.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })} HT
-                        </div>
-                      </div>
-                    </div>
+                      return (
+                        <div 
+                          key={service.id}
+                          className={`relative bg-white rounded-2xl p-8 transition-all duration-300 flex flex-col h-full ${
+                            isHighlighted 
+                              ? 'border-2 border-primary shadow-xl shadow-primary/10 scale-105 z-10' 
+                              : 'border border-slate-200 shadow-sm hover:shadow-md'
+                          }`}
+                        >
+                          {isHighlighted && (
+                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white text-sm font-bold px-4 py-1.5 rounded-full shadow-md whitespace-nowrap">
+                              Le plus populaire
+                            </div>
+                          )}
+                          
+                          <div className="mb-6">
+                            <div className="flex items-center gap-3 mb-4">
+                              {IconComponent && (
+                                <div className={`p-2 rounded-lg ${isHighlighted ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500'}`}>
+                                  <IconComponent className="w-6 h-6" />
+                                </div>
+                              )}
+                              <h3 className={`text-xl font-bold ${isHighlighted ? 'text-primary' : 'text-slate-700'}`}>
+                                {service.name}
+                              </h3>
+                            </div>
+                            <div className="flex items-baseline gap-2 mb-2">
+                              <span className="text-4xl font-black text-slate-900">
+                                {service.price_ht}€
+                              </span>
+                              <span className="text-sm font-medium text-slate-500">
+                                + frais légaux
+                              </span>
+                            </div>
+                            <p className="text-sm text-slate-500 min-h-[2.5rem]">
+                              {features[0] || service.description}
+                            </p>
+                          </div>
 
-                    <Link
-                      to="/auth"
-                      state={{ selectedFormaliteId: service.id, selectedFormaliteName: service.name }}
-                      className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-primary transition-colors shadow-md"
-                    >
-                      Démarrer
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
+                          <div className="flex-1 space-y-4 mb-8">
+                            {features.map((feature: string, i: number) => (
+                              <div key={i} className="flex items-start gap-3">
+                                <div className="mt-0.5 bg-emerald-100 rounded-full p-0.5 flex-shrink-0">
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                </div>
+                                <span className="text-sm text-slate-600 leading-tight">{feature.replace(/\.$/, '')}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="mt-auto pt-6 border-t border-slate-100">
+                            <Link
+                              to="/auth"
+                              state={{ selectedFormaliteId: service.id, selectedFormaliteName: service.name }}
+                              className={`flex items-center justify-center w-full py-3.5 rounded-xl text-sm font-bold transition-all ${
+                                isHighlighted
+                                  ? 'bg-primary text-white hover:bg-blue-600 shadow-md shadow-primary/20'
+                                  : 'bg-white text-primary border-2 border-primary hover:bg-blue-50'
+                              }`}
+                            >
+                              Choisir {service.name.split(' ')[0]}
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
