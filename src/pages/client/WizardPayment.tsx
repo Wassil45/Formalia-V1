@@ -50,10 +50,12 @@ export function WizardPayment() {
           .eq('id', currentDossierId);
         if (error) throw error;
       } else {
+        const timestamp = Date.now().toString(36).toUpperCase();
+        const random = crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase();
         const { data: dossier, error } = await supabase
           .from('dossiers')
           .insert({
-            reference: 'DOS-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+            reference: `DOS-${timestamp}-${random}`,
             client_id: user!.id,
             formalite_id: wizardData.formaliteId!,
             status: 'draft',

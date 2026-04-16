@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import Stripe from 'stripe';
 import path from "path";
 import fs from "fs";
+import { GoogleGenAI } from "@google/genai";
 import adminUsersRouter from "./server/routes/admin-users.ts";
 import { requireAdmin } from "./server/middleware/auth.ts";
 
@@ -14,6 +15,8 @@ dotenv.config();
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' as any }) 
   : null;
+
+const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
 
 async function startServer() {
   const app = express();
@@ -67,6 +70,27 @@ async function startServer() {
   });
 
   app.use(express.json());
+
+  // Gemini AI Route
+  app.post("/api/ai/generate", async (req, res) => {
+    if (!ai) {
+      return res.status(500).json({ error: "Gemini API not configured" });
+    }
+    try {
+      const { prompt } = req.body;
+      if (!prompt) return res.status(400).json({ error: "Prompt is required" });
+      
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt
+      });
+      
+      res.json({ text: response.text });
+    } catch (error: any) {
+      console.error("Gemini API Error:", error);
+      res.status(500).json({ error: error.message || "Failed to generate content" });
+    }
+  });
 
   // API Routes
   app.use("/api/admin/users", adminUsersRouter);

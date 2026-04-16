@@ -37,6 +37,9 @@ export function Auth() {
     selectedFormaliteName?: string 
   } | null;
 
+  const searchParams = new URLSearchParams(location.search);
+  const redirectParam = searchParams.get('redirect');
+
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
@@ -55,9 +58,15 @@ export function Auth() {
 
         toast.success(`Connexion réussie: ${`Bienvenue !`}`);
 
-        const redirectTo = selectedFormalite?.selectedFormaliteId
-          ? '/formalite'
-          : profile?.role === 'admin' ? '/admin' : '/dashboard';
+        let redirectTo = '/dashboard';
+        if (selectedFormalite?.selectedFormaliteId) {
+          redirectTo = '/formalite';
+        } else if (redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
+          redirectTo = redirectParam;
+        } else if (profile?.role === 'admin') {
+          redirectTo = '/admin';
+        }
+
         navigate(redirectTo, { state: selectedFormalite });
       } else {
         const { error } = await supabase.auth.signUp({ email, password });
