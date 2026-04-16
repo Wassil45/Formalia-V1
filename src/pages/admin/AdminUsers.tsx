@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
-import { useToast } from '../../components/ui/Toast';
+import { toast } from 'sonner';
 import { SkeletonRow } from '../../components/ui/Skeleton';
 import { 
   Users, Search, Filter, Shield, ShieldOff, Mail,
@@ -15,7 +15,6 @@ const ROLE_CONFIG = {
 };
 
 export function AdminUsers() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
@@ -62,12 +61,11 @@ export function AdminUsers() {
     },
     onSuccess: (_, { role }) => {
       queryClient.invalidateQueries({ queryKey: ['admin_users'] });
-      toast('success', 'Rôle mis à jour', 
-        role === 'admin' ? 'L\'utilisateur est maintenant administrateur' 
-          : 'L\'utilisateur est repassé en client');
+      toast.success(`Rôle mis à jour: ${role === 'admin' ? 'L\'utilisateur est maintenant administrateur' 
+          : 'L\'utilisateur est repassé en client'}`);
       setSelectedUser(null);
     },
-    onError: (err: any) => toast('error', 'Erreur', err.message),
+    onError: (err: any) => toast.error(`Erreur: ${err.message}`),
   });
 
   // Filtered users

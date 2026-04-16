@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Header } from './components/layout/Header';
 import { PublicLayout } from './components/layout/PublicLayout';
 import { ClientLayout } from './components/layout/ClientLayout';
@@ -27,6 +27,7 @@ const ClientDocuments = lazy(() => import('./pages/client/ClientDocuments').then
 const ClientPayments = lazy(() => import('./pages/client/ClientPayments').then(m => ({ default: m.ClientPayments })));
 const ClientSettings = lazy(() => import('./pages/client/ClientSettings').then(m => ({ default: m.ClientSettings })));
 const ConfirmationPage = lazy(() => import('./pages/client/ConfirmationPage').then(m => ({ default: m.ConfirmationPage })));
+const ClientMessages = lazy(() => import('./pages/client/ClientMessages').then(m => ({ default: m.ClientMessages })));
 
 // ── Wizard Pages ──
 const WizardStep1 = lazy(() => import('./pages/client/WizardStep1').then(m => ({ default: m.WizardStep1 })));
@@ -58,71 +59,83 @@ const PageLoader = () => (
   </div>
 );
 
+function AppContent() {
+  const location = useLocation();
+  const hideHeader = location.pathname.startsWith('/formalite');
+  
+  return (
+    <>
+      <CookieBanner />
+      {!hideHeader && <Header />}
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+
+          {/* ── Routes Publiques ── */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/tarifs" element={<Tarifs />} />
+            <Route path="/faq" element={<Faq />} />
+            <Route path="/mentions-legales" element={<MentionsLegales />} />
+            <Route path="/cgv" element={<CGV />} />
+            <Route path="/confidentialite" element={<Confidentialite />} />
+          </Route>
+
+          {/* ── Auth ── */}
+          <Route path="/auth" element={<Auth />} />
+
+          {/* ── Client — avec sidebar ── */}
+          <Route element={<ProtectedRoute requiredRole="client" />}>
+            <Route element={<ClientLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard/dossiers" element={<DossiersList />} />
+              <Route path="/dashboard/dossiers/:id" element={<DossierDetail />} />
+              <Route path="/dashboard/documents" element={<ClientDocuments />} />
+              <Route path="/dashboard/facturation" element={<ClientPayments />} />
+              <Route path="/dashboard/parametres" element={<ClientSettings />} />
+              <Route path="/dashboard/confirmation" element={<ConfirmationPage />} />
+              <Route path="/dashboard/messages" element={<ClientMessages />} />
+            </Route>
+          </Route>
+
+          {/* ── Wizard — plein écran ── */}
+          <Route element={<ProtectedRoute requiredRole="client" />}>
+            <Route element={<WizardLayout />}>
+              <Route path="/formalite" element={<WizardStep1 />} />
+              <Route path="/formalite/etape-2" element={<WizardStep2 />} />
+              <Route path="/formalite/etape-3" element={<WizardStep3 />} />
+              <Route path="/formalite/paiement" element={<WizardPayment />} />
+            </Route>
+          </Route>
+
+          {/* ── Admin ── */}
+          <Route element={<ProtectedRoute requiredRole="admin" />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/dossiers" element={<AdminDossiers />} />
+              <Route path="/admin/dossiers/:id" element={<AdminDossiers />} />
+              <Route path="/admin/produits" element={<AdminProducts />} />
+              <Route path="/admin/utilisateurs" element={<AdminUsers />} />
+              <Route path="/admin/emails" element={<AdminEmails />} />
+              <Route path="/admin/faq" element={<AdminFaq />} />
+              <Route path="/admin/parametres" element={<AdminSettings />} />
+              <Route path="/admin/statistiques" element={<AdminStatistics />} />
+              <Route path="/admin/exports" element={<AdminExports />} />
+              <Route path="/admin/account" element={<AdminAccount />} />
+            </Route>
+          </Route>
+
+        </Routes>
+      </Suspense>
+    </>
+  );
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <CookieBanner />
-        <Header />
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-
-            {/* ── Routes Publiques ── */}
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/tarifs" element={<Tarifs />} />
-              <Route path="/faq" element={<Faq />} />
-              <Route path="/mentions-legales" element={<MentionsLegales />} />
-              <Route path="/cgv" element={<CGV />} />
-              <Route path="/confidentialite" element={<Confidentialite />} />
-            </Route>
-
-            {/* ── Auth ── */}
-            <Route path="/auth" element={<Auth />} />
-
-            {/* ── Client — avec sidebar ── */}
-            <Route element={<ProtectedRoute requiredRole="client" />}>
-              <Route element={<ClientLayout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/dashboard/dossiers" element={<DossiersList />} />
-                <Route path="/dashboard/dossiers/:id" element={<DossierDetail />} />
-                <Route path="/dashboard/documents" element={<ClientDocuments />} />
-                <Route path="/dashboard/facturation" element={<ClientPayments />} />
-                <Route path="/dashboard/parametres" element={<ClientSettings />} />
-                <Route path="/dashboard/confirmation" element={<ConfirmationPage />} />
-              </Route>
-            </Route>
-
-            {/* ── Wizard — plein écran ── */}
-            <Route element={<ProtectedRoute requiredRole="client" />}>
-              <Route element={<WizardLayout />}>
-                <Route path="/formalite" element={<WizardStep1 />} />
-                <Route path="/formalite/etape-2" element={<WizardStep2 />} />
-                <Route path="/formalite/etape-3" element={<WizardStep3 />} />
-                <Route path="/formalite/paiement" element={<WizardPayment />} />
-              </Route>
-            </Route>
-
-            {/* ── Admin ── */}
-            <Route element={<ProtectedRoute requiredRole="admin" />}>
-              <Route element={<AdminLayout />}>
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/dossiers" element={<AdminDossiers />} />
-                <Route path="/admin/dossiers/:id" element={<AdminDossiers />} />
-                <Route path="/admin/produits" element={<AdminProducts />} />
-                <Route path="/admin/utilisateurs" element={<AdminUsers />} />
-                <Route path="/admin/emails" element={<AdminEmails />} />
-                <Route path="/admin/faq" element={<AdminFaq />} />
-                <Route path="/admin/parametres" element={<AdminSettings />} />
-                <Route path="/admin/statistiques" element={<AdminStatistics />} />
-                <Route path="/admin/exports" element={<AdminExports />} />
-                <Route path="/admin/account" element={<AdminAccount />} />
-              </Route>
-            </Route>
-
-          </Routes>
-        </Suspense>
+        <AppContent />
       </Router>
     </ErrorBoundary>
   );

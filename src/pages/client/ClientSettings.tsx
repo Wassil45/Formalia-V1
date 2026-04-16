@@ -20,15 +20,16 @@ export function ClientSettings() {
 
   useEffect(() => {
     if (profile) {
+      const fullProfile = profile as any;
       setFormData({
-        first_name: profile.first_name || '',
-        last_name: profile.last_name || '',
-        phone: profile.phone || '',
-        company_name: profile.company_name || '',
-        siret: profile.siret || '',
-        address: profile.address || '',
-        city: profile.city || '',
-        postal_code: profile.postal_code || '',
+        first_name: fullProfile.first_name || '',
+        last_name: fullProfile.last_name || '',
+        phone: fullProfile.phone || '',
+        company_name: fullProfile.company_name || '',
+        siret: fullProfile.siret || '',
+        address: fullProfile.address || '',
+        city: fullProfile.city || '',
+        postal_code: fullProfile.postal_code || '',
       });
     }
   }, [profile]);

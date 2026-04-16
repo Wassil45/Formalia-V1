@@ -3,13 +3,14 @@ import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../hooks/useSettings';
 import { 
   LayoutDashboard, FolderOpen, FileText, 
-  CreditCard, Settings, LogOut, Scale, ChevronRight, Plus, HelpCircle
+  CreditCard, Settings, LogOut, Scale, ChevronRight, Plus, HelpCircle, MessageSquare
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { to: '/dashboard/dossiers', label: 'Mes dossiers', icon: FolderOpen },
   { to: '/dashboard/documents', label: 'Documents', icon: FileText },
+  { to: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
   { to: '/dashboard/facturation', label: 'Facturation', icon: CreditCard },
   { to: '/faq', label: 'FAQ', icon: HelpCircle },
   { to: '/dashboard/parametres', label: 'Paramètres', icon: Settings },
@@ -82,8 +83,8 @@ export function ClientLayout() {
         <div className="p-3 border-t border-slate-50">
           <div className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 
             transition-colors group">
-            <div className="w-8 h-8 gradient-primary rounded-xl flex items-center justify-center 
-              text-white text-xs font-bold flex-shrink-0 shadow-sm">
+            <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center 
+              text-primary text-xs font-bold flex-shrink-0 shadow-sm">
               {initials.toUpperCase() || '?'}
             </div>
             <div className="flex-1 min-w-0">

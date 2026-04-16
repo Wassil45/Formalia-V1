@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
-import { useToast } from '../../components/ui/Toast';
+import { toast } from 'sonner';
 import { 
   Plus, Edit, Trash2, GripVertical, Eye, EyeOff, 
   X, Save, ChevronDown, ChevronUp
@@ -25,7 +25,6 @@ interface FaqItem {
 }
 
 function FaqModal({ item, onClose }: { item?: FaqItem; onClose: () => void }) {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [question, setQuestion] = useState(item?.question ?? '');
   const [answer, setAnswer] = useState(item?.answer ?? '');
@@ -54,11 +53,10 @@ function FaqModal({ item, onClose }: { item?: FaqItem; onClose: () => void }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['faq'] });
       queryClient.invalidateQueries({ queryKey: ['public_faq'] });
-      toast('success', item ? 'Question mise à jour' : 'Question ajoutée',
-        'Visible immédiatement sur le site');
+      toast.success(`${item ? 'Question mise à jour' : 'Question ajoutée'}: Visible immédiatement sur le site`);
       onClose();
     },
-    onError: (err: any) => toast('error', 'Erreur', err.message),
+    onError: (err: any) => toast.error(`Erreur: ${err.message}`),
   });
 
   return (
@@ -145,7 +143,6 @@ function FaqModal({ item, onClose }: { item?: FaqItem; onClose: () => void }) {
 }
 
 export function AdminFaq() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [modal, setModal] = useState<{ open: boolean; item?: FaqItem }>({ open: false });
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -168,8 +165,8 @@ export function AdminFaq() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['faq'] });
       queryClient.invalidateQueries({ queryKey: ['public_faq'] });
-      toast('success', 'Question supprimée');
-    },
+      toast.success('Question supprimée');
+    }
   });
 
   const togglePublish = useMutation({
@@ -181,8 +178,8 @@ export function AdminFaq() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['faq'] });
       queryClient.invalidateQueries({ queryKey: ['public_faq'] });
-      toast('success', 'Visibilité mise à jour');
-    },
+      toast.success('Visibilité mise à jour');
+    }
   });
 
   const filtered = faqs?.filter(f => !activeCategory || f.category === activeCategory) ?? [];

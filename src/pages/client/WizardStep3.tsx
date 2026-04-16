@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWizard } from '../../context/WizardContext';
-import { useToast } from '../../components/ui/Toast';
+import { toast } from 'sonner';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { 
@@ -23,7 +23,6 @@ export function WizardStep3() {
   const navigate = useNavigate();
   const { data: wizardData, addDocument, removeDocument, canProceedToStep } = useWizard();
   const { user } = useAuth();
-  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState<string[]>([]);
@@ -34,11 +33,11 @@ export function WizardStep3() {
 
   const uploadFile = async (file: File) => {
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      toast('error', 'Format non supporté', 'Utilisez PDF, JPG, PNG ou WebP');
+      toast.error('Format non supporté: Utilisez PDF, JPG, PNG ou WebP');
       return;
     }
     if (file.size > MAX_SIZE) {
-      toast('error', 'Fichier trop volumineux', `${file.name} dépasse 10 Mo`);
+      toast.error(`Fichier trop volumineux: ${file.name} dépasse 10 Mo`);
       return;
     }
 
@@ -55,7 +54,7 @@ export function WizardStep3() {
     setUploading(prev => prev.filter(id => id !== fileId));
 
     if (!result.success) {
-      toast('error', 'Erreur d\'upload', result.error ?? 'Erreur inconnue');
+      toast.error(`Erreur d'upload: ${result.error ?? 'Erreur inconnue'}`);
       return;
     }
 
@@ -66,7 +65,7 @@ export function WizardStep3() {
       size: file.size,
       type: file.type,
     });
-    toast('success', 'Document ajouté', file.name);
+    toast.success(`Document ajouté: ${file.name}`);
   };
 
   const handleFiles = (files: FileList) => {

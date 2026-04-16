@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWizard } from '../../context/WizardContext';
-import { useToast } from '../../components/ui/Toast';
+import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { 
@@ -15,7 +15,6 @@ export function WizardPayment() {
   const navigate = useNavigate();
   const { data: wizardData, setDossierId, canProceedToStep } = useWizard();
   const { user } = useAuth();
-  const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
@@ -95,7 +94,7 @@ export function WizardPayment() {
         throw new Error('URL de paiement non reçue');
       }
     } catch (err: unknown) {
-      toast('error', 'Erreur', err instanceof Error ? err.message : 'Une erreur est survenue');
+      toast.error(`Erreur: ${err instanceof Error ? err.message : 'Une erreur est survenue'}`);
     } finally {
       setIsProcessing(false);
     }
@@ -236,9 +235,7 @@ export function WizardPayment() {
             <div className="px-5 pb-5">
               <button
                 onClick={() => navigate('/formalite/etape-3')}
-                className="w-full flex items-center justify-center gap-2 py-2.5 
-                  text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-50 
-                  rounded-xl transition-all"
+                className="btn-secondary w-full"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Modifier le dossier

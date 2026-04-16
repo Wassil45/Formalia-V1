@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { MOCK_SERVICES } from '../../data/mockServices';
-import { useToast } from '../../components/ui/Toast';
+import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -43,7 +43,6 @@ function ProductModal({
 }: { 
   product?: ProductForm & { id: string }; onClose: () => void 
 }) {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const isEdit = !!product;
 
@@ -83,11 +82,10 @@ function ProductModal({
       queryClient.invalidateQueries({ queryKey: ['formalites_catalogue_tarifs'] });
       queryClient.invalidateQueries({ queryKey: ['admin_formalites_catalogue'] });
       queryClient.invalidateQueries({ queryKey: ['formalites_wizard'] });
-      toast('success', isEdit ? 'Produit mis à jour' : 'Produit créé', 
-        'Visible immédiatement sur le site client');
+      toast.success(`${isEdit ? 'Produit mis à jour' : 'Produit créé'}: Visible immédiatement sur le site client`);
       onClose();
     },
-    onError: (err: Error) => toast('error', 'Erreur', err.message),
+    onError: (err: Error) => toast.error(`Erreur: ${err.message}`),
   });
 
   const inputCls = (err: boolean) => `w-full px-3.5 py-2.5 rounded-xl border text-sm 
@@ -275,7 +273,6 @@ function ProductModal({
 }
 
 export function AdminProducts() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -315,10 +312,10 @@ export function AdminProducts() {
       queryClient.invalidateQueries({ queryKey: ['formalites_catalogue_tarifs'] });
       queryClient.invalidateQueries({ queryKey: ['admin_formalites_catalogue'] });
       queryClient.invalidateQueries({ queryKey: ['formalites_wizard'] });
-      toast('success', 'Produit supprimé', 'Retiré du catalogue client');
+      toast.success(`Produit supprimé: Retiré du catalogue client`);
       setDeleteConfirm(null);
     },
-    onError: (err: Error) => toast('error', 'Erreur', err.message),
+    onError: (err: Error) => toast.error(`Erreur: ${err.message}`),
   });
 
   const toggleActive = useMutation({
@@ -332,8 +329,7 @@ export function AdminProducts() {
       queryClient.invalidateQueries({ queryKey: ['formalites_catalogue_tarifs'] });
       queryClient.invalidateQueries({ queryKey: ['admin_formalites_catalogue'] });
       queryClient.invalidateQueries({ queryKey: ['formalites_wizard'] });
-      toast('success', is_active ? 'Produit activé' : 'Produit masqué', 
-        'Mis à jour sur le site client');
+      toast.success(`${is_active ? 'Produit activé' : 'Produit masqué'}: Mis à jour sur le site client`);
     },
   });
 

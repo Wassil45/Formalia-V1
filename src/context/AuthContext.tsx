@@ -4,10 +4,11 @@ import { supabase, getSafeSession } from '../lib/supabase';
 import { Database } from '../types/database.types';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
+type ProfilePartial = Pick<Profile, 'id' | 'role' | 'first_name' | 'last_name' | 'email'>;
 
 interface AuthContextType {
   user: User | null;
-  profile: Profile | null;
+  profile: ProfilePartial | null;
   role: 'client' | 'admin' | null;
   isAdmin: boolean;
   isLoading: boolean;
@@ -18,7 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<ProfilePartial | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .select('id, role, first_name, last_name, email')
               .eq('id', session.user.id)
               .single()
-            setProfile(data as any)
+            setProfile(data as ProfilePartial)
           } catch (err) {
             console.error('Error in onAuthStateChange profile fetch:', err)
           } finally {
@@ -94,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
       if (!cancelled) {
         if (error) throw error;
-        setProfile(data as any);
+        setProfile(data as ProfilePartial);
       }
     } catch (error: any) {
       if (!cancelled) console.error('Error fetching profile:', error);
@@ -111,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             })
             .select()
             .single();
-          if (!cancelled) setProfile(newProfile as any);
+          if (!cancelled) setProfile(newProfile as ProfilePartial);
         } catch (insertError) {
           console.error('Impossible de créer le profil:', insertError);
         }

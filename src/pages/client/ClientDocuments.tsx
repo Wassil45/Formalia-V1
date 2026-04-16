@@ -4,11 +4,10 @@ import { getDocumentUrl } from '../../lib/storage';
 import { useAuth } from '../../context/AuthContext';
 import { FileText, Download, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useToast } from '../../components/ui/Toast';
+import { toast } from 'sonner';
 
 export function ClientDocuments() {
   const { user } = useAuth();
-  const { toast } = useToast();
 
   const { data: dossiers, isLoading } = useQuery({
     queryKey: ['client_documents', user?.id],
@@ -47,7 +46,7 @@ export function ClientDocuments() {
       const signedUrl = await getDocumentUrl(url);
       window.open(signedUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
-      toast('error', 'Erreur', 'Impossible d\'ouvrir le document');
+      toast.error(`Erreur: Impossible d\'ouvrir le document`);
     }
   };
 

@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useEffect } from 'react';
+import { MOCK_DOSSIERS } from '../data/mockDossiers';
 
 export type DossierWithRelations = {
   id: string;
@@ -43,6 +44,11 @@ export function useAdminDossiers() {
     queryKey: ['admin_dossiers'],
     enabled: !!user,
     queryFn: async (): Promise<DossierWithRelations[]> => {
+      if (!isSupabaseConfigured()) {
+        console.warn('Supabase non configuré — données de démonstration utilisées');
+        return MOCK_DOSSIERS.filter(d => d.status !== 'draft') as unknown as DossierWithRelations[];
+      }
+
       const { data, error } = await supabase
         .from('dossiers')
         .select(`
@@ -50,6 +56,7 @@ export function useAdminDossiers() {
           profiles (first_name, last_name, email),
           formalites_catalogue (name, type)
         `)
+        .neq('status', 'draft')
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -88,6 +95,10 @@ export function useAdminPriorityDossiers() {
     queryKey: ['admin_priority_dossiers'],
     enabled: !!user,
     queryFn: async (): Promise<DossierWithRelations[]> => {
+      if (!isSupabaseConfigured()) {
+        return MOCK_DOSSIERS.filter(d => ['received', 'pending_documents'].includes(d.status)) as unknown as DossierWithRelations[];
+      }
+
       const { data, error } = await supabase
         .from('dossiers')
         .select(`

@@ -29,7 +29,7 @@ export function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
     return <Navigate to={`/auth?redirect=${safePath}`} replace />;
   }
 
-  if (requiredRole && role !== requiredRole) {
+  if (requiredRole && role !== null && role !== requiredRole) {
     const targetPath = role === 'admin' ? '/admin' : '/dashboard';
     if (location.pathname !== targetPath) {
       return <Navigate to={targetPath} replace />;

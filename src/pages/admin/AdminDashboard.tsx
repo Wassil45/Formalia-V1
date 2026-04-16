@@ -1,8 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase, isSupabaseConfigured } from '../../lib/supabase';
-import { MOCK_DOSSIERS } from '../../data/mockDossiers';
-import { DossierWithRelations } from '../../hooks/useAdmin';
+import { DossierWithRelations, useAdminDossiers } from '../../hooks/useAdmin';
 import { SkeletonCard, SkeletonRow } from '../../components/ui/Skeleton';
 import { 
   FolderOpen, Clock, AlertCircle, CheckCircle2, TrendingUp, 
@@ -33,31 +30,7 @@ export function AdminDashboard() {
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
-  const { data: dossiers, isLoading, isError } = useQuery({
-    queryKey: ['admin_dossiers'],
-    queryFn: async (): Promise<DossierWithRelations[]> => {
-      if (!isSupabaseConfigured()) {
-        console.warn('Supabase non configuré — données de démonstration utilisées');
-        return MOCK_DOSSIERS as unknown as DossierWithRelations[];
-      }
-      try {
-        const { data, error } = await supabase
-          .from('dossiers')
-          .select('*, profiles(first_name, last_name, email), formalites_catalogue(name, type)')
-          .not('status', 'in', '("draft")')
-          .order('created_at', { ascending: true });
-        if (error) {
-          console.error('Erreur Supabase:', error);
-          return MOCK_DOSSIERS as unknown as DossierWithRelations[];
-        }
-        return data && data.length > 0 ? data as unknown as DossierWithRelations[] : MOCK_DOSSIERS as unknown as DossierWithRelations[];
-      } catch (err) {
-        console.error('Erreur réseau:', err);
-        return MOCK_DOSSIERS as unknown as DossierWithRelations[];
-      }
-    },
-    retry: false,
-  });
+  const { data: dossiers, isLoading, isError } = useAdminDossiers();
 
   const kpis = useMemo(() => {
     if (!dossiers) return null;

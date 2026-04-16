@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
-import { useToast } from '../../components/ui/Toast';
+import { toast } from 'sonner';
 import { 
   ArrowLeft, FileText, Clock, CheckCircle2, AlertCircle, 
   XCircle, Send, Upload, File, X, Loader2,
@@ -31,7 +31,6 @@ export function DossierDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState('');
@@ -82,7 +81,7 @@ export function DossierDetail() {
       }
     } catch (err: unknown) {
       console.error('Payment error:', err);
-      toast('error', 'Erreur', err instanceof Error ? err.message : 'Une erreur est survenue');
+      toast.error(`Erreur: ${err instanceof Error ? err.message : 'Une erreur est survenue'}`);
     } finally {
       setIsPaying(false);
     }
@@ -121,7 +120,7 @@ export function DossierDetail() {
   // Upload de documents supplémentaires
   const uploadDocument = async (file: File) => {
     if (file.size > 10 * 1024 * 1024) {
-      toast('error', 'Fichier trop volumineux', 'Maximum 10 Mo');
+      toast.error(`Fichier trop volumineux: Maximum 10 Mo`);
       return;
     }
 
@@ -138,7 +137,7 @@ export function DossierDetail() {
     setUploadingFiles(prev => prev.filter(f => f !== fileId));
 
     if (!result.success) {
-      toast('error', 'Erreur d\'upload', result.error ?? 'Erreur inconnue');
+      toast.error(`Erreur d\'upload: ${result.error ?? 'Erreur inconnue'}`);
       return;
     }
 
@@ -156,10 +155,10 @@ export function DossierDetail() {
       .eq('id', id!);
 
     if (updateError) {
-      toast('error', 'Erreur', updateError.message);
+      toast.error(`Erreur: ${updateError.message}`);
     } else {
       queryClient.invalidateQueries({ queryKey: ['dossier_detail', id] });
-      toast('success', 'Document ajouté', file.name);
+      toast.success(`Document ajouté: ${file.name}`);
     }
   };
 
@@ -179,7 +178,7 @@ export function DossierDetail() {
       queryClient.invalidateQueries({ queryKey: ['client_messages', id] });
       setMessage('');
     },
-    onError: (err: any) => toast('error', 'Erreur', err.message),
+    onError: (err: any) => toast.error(`Erreur: ${err.message}`),
   });
 
   if (isLoading) {
@@ -213,7 +212,7 @@ export function DossierDetail() {
       const signedUrl = await getDocumentUrl(url);
       window.open(signedUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
-      toast('error', 'Erreur', 'Impossible d\'ouvrir le document');
+      toast.error(`Erreur: Impossible d\'ouvrir le document`);
     }
   };
 

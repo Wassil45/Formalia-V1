@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '../../lib/supabase';
-import { useToast } from '../../components/ui/Toast';
+import { toast } from 'sonner';
 import { useSettings } from '../../hooks/useSettings';
 import { 
   Mail, Lock, Eye, EyeOff, Scale, CheckCircle2, 
@@ -29,7 +29,6 @@ export function Auth() {
   const [forgotSent, setForgotSent] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
   const { data: settings } = useSettings();
   const logoUrl = settings?.logo_url;
 
@@ -54,7 +53,7 @@ export function Auth() {
           .eq('id', authData.user!.id)
           .single();
 
-        toast('success', 'Connexion réussie', `Bienvenue !`);
+        toast.success(`Connexion réussie: ${`Bienvenue !`}`);
 
         const redirectTo = selectedFormalite?.selectedFormaliteId
           ? '/formalite'
@@ -63,21 +62,21 @@ export function Auth() {
       } else {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        toast('success', 'Compte créé !', 'Vérifiez votre email pour confirmer.');
+        toast.success(`Compte créé !: Vérifiez votre email pour confirmer.`);
       }
     } catch (err: unknown) {
-      toast('error', 'Erreur', err instanceof Error ? err.message : 'Une erreur est survenue');
+      toast.error(`Erreur: ${err instanceof Error ? err.message : 'Une erreur est survenue'}`);
     }
   };
 
   const handleForgotPassword = async () => {
     const email = watch('email');
-    if (!email) { toast('warning', 'Email requis', 'Entrez votre email d\'abord'); return; }
+    if (!email) { toast.warning('Email requis: Entrez votre email d\'abord'); return; }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-    if (error) toast('error', 'Erreur', error.message);
-    else { setForgotSent(true); toast('success', 'Email envoyé !', 'Vérifiez votre boîte mail.'); }
+    if (error) toast.error(`Erreur: ${error.message}`);
+    else { setForgotSent(true); toast.success(`Email envoyé !: Vérifiez votre boîte mail.`); }
   };
 
   return (

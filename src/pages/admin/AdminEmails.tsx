@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
-import { useToast } from '../../components/ui/Toast';
+import { toast } from 'sonner';
 import { 
   Mail, Edit, Eye, EyeOff, X, Save, 
   Variable, Info, CheckCircle2
@@ -23,7 +23,6 @@ function TemplateEditor({
 }: { 
   template: EmailTemplate; onClose: () => void 
 }) {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [subject, setSubject] = useState(template.subject);
   const [bodyHtml, setBodyHtml] = useState(template.body_html);
@@ -48,10 +47,10 @@ function TemplateEditor({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email_templates'] });
-      toast('success', 'Modèle sauvegardé', template.name);
+      toast.success(`Modèle sauvegardé: ${template.name}`);
       onClose();
     },
-    onError: (err: any) => toast('error', 'Erreur', err.message),
+    onError: (err: any) => toast.error(`Erreur: ${err.message}`),
   });
 
   // Prévisualisation : remplace les variables par les valeurs de test
@@ -217,7 +216,6 @@ function TemplateEditor({
 }
 
 export function AdminEmails() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
 
@@ -257,8 +255,8 @@ export function AdminEmails() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email_templates'] });
-      toast('success', 'Modèle mis à jour');
-    },
+      toast.success('Modèle mis à jour');
+    }
   });
 
   const TRIGGER_LABELS: Record<string, string> = {

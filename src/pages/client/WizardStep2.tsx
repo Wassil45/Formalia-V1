@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -35,11 +35,17 @@ export function WizardStep2() {
   const schema = formalite?.form_schema as { steps: any[] } | null;
   const hasCustomForm = schema?.steps && schema.steps.length > 0;
 
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<any>({
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<any>({
     defaultValues: wizardData.companyInfo ?? {},
   });
 
-  const [currentSchemaStep, setCurrentSchemaStep] = React.useState(0);
+  useEffect(() => {
+    if (wizardData.companyInfo) {
+      reset(wizardData.companyInfo);
+    }
+  }, [wizardData.companyInfo, reset]);
+
+  const [currentSchemaStep, setCurrentSchemaStep] = useState(0);
   const schemaSteps = schema?.steps ?? [];
   const currentSchemaStepData = schemaSteps[currentSchemaStep];
   const isLastSchemaStep = currentSchemaStep >= schemaSteps.length - 1;
@@ -287,11 +293,17 @@ const inputClass = (hasError: boolean) => `
 
 function DefaultCompanyForm({ onSubmit, defaultValues }: { onSubmit: (data: DefaultFormData) => void, defaultValues: any }) {
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors } } = useForm<DefaultFormData>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<DefaultFormData>({
     resolver: zodResolver(defaultSchema) as any,
     mode: 'onBlur',
     defaultValues: defaultValues ?? {},
   });
+
+  useEffect(() => {
+    if (defaultValues) {
+      reset(defaultValues);
+    }
+  }, [defaultValues, reset]);
 
   return (
     <div className="max-w-2xl mx-auto animate-fade-in-up">

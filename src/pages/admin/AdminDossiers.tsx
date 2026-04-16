@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { getDocumentUrl } from '../../lib/storage';
 import { useAuth } from '../../context/AuthContext';
-import { useToast } from '../../components/ui/Toast';
+import { toast } from 'sonner';
 import { useSendAdminEmail } from '../../hooks/useAdmin';
 import { SkeletonRow } from '../../components/ui/Skeleton';
 import { 
@@ -37,7 +37,6 @@ const STATUS_CONFIG: Record<string, {
 
 function DossierDrawer({ dossier, onClose }: { dossier: any; onClose: () => void }) {
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const [statusNote, setStatusNote] = useState('');
@@ -88,10 +87,10 @@ function DossierDrawer({ dossier, onClose }: { dossier: any; onClose: () => void
         body
       });
       
-      toast('success', 'Email envoyé', `Le modèle "${template.name}" a été envoyé.`);
+      toast.success(`Email envoyé: ${`Le modèle "${template.name}" a été envoyé.`}`);
       setSelectedTemplate('');
     } catch (err: any) {
-      toast('error', 'Erreur', err.message);
+      toast.error(`Erreur: ${err.message}`);
     }
   };
 
@@ -157,13 +156,12 @@ function DossierDrawer({ dossier, onClose }: { dossier: any; onClose: () => void
     onSuccess: (_, { newStatus }) => {
       queryClient.invalidateQueries({ queryKey: ['admin_dossiers'] });
       queryClient.invalidateQueries({ queryKey: ['dossier_history', dossier.id] });
-      toast('success', 'Statut mis à jour', 
-        `Dossier ${dossier.reference} → ${STATUS_CONFIG[newStatus]?.label}`);
+      toast.success(`Statut mis à jour: ${`Dossier ${dossier.reference} → ${STATUS_CONFIG[newStatus]?.label}`}`);
       setShowStatusChange(false);
       setStatusNote('');
       onClose(); // Ferme le drawer et recharge
     },
-    onError: (err: any) => toast('error', 'Erreur', err.message),
+    onError: (err: any) => toast.error(`Erreur: ${err.message}`),
   });
 
   // Mutation : envoyer un message
@@ -181,9 +179,9 @@ function DossierDrawer({ dossier, onClose }: { dossier: any; onClose: () => void
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dossier_messages', dossier.id] });
       setMessage('');
-      toast('success', 'Message envoyé', 'Le client a été notifié');
+      toast.success(`Message envoyé: Le client a été notifié`);
     },
-    onError: (err: any) => toast('error', 'Erreur', err.message),
+    onError: (err: any) => toast.error(`Erreur: ${err.message}`),
   });
 
   const currentStatusConfig = STATUS_CONFIG[dossier.status];
@@ -197,7 +195,7 @@ function DossierDrawer({ dossier, onClose }: { dossier: any; onClose: () => void
       const signedUrl = await getDocumentUrl(url);
       window.open(signedUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
-      toast('error', 'Erreur', 'Impossible d\'ouvrir le document');
+      toast.error(`Erreur: Impossible d\'ouvrir le document`);
     }
   };
 

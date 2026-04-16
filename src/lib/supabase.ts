@@ -12,9 +12,13 @@ export const isSupabaseConfigured = () => {
          key && key !== 'placeholder-key';
 };
 
+const safeStorage = (() => {
+  try { return window.localStorage; } catch { return undefined; }
+})();
+
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: window.localStorage,
+    storage: safeStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
@@ -23,18 +27,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     }
   }
 });
-
-// Global listener: handle token errors automatically
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-    if (!session) {
-      // Clear corrupted tokens from localStorage
-      Object.keys(localStorage)
-        .filter(key => key.startsWith('sb-'))
-        .forEach(key => localStorage.removeItem(key))
-    }
-  }
-})
 
 // Safe session getter — clears bad tokens automatically
 let sessionPromise: Promise<any> | null = null;

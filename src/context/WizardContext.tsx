@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 
 export interface CompanyInfo {
   denomination?: string;
@@ -54,31 +54,54 @@ const initialData: WizardData = {
 
 const WizardContext = createContext<WizardContextType | undefined>(undefined);
 
+const WIZARD_STORAGE_KEY = 'formalia_wizard';
+
+function useWizardPersistence(initialState: WizardData) {
+  const [data, setData] = useState<WizardData>(() => {
+    try {
+      const stored = sessionStorage.getItem(WIZARD_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : initialState;
+    } catch (e) {
+      console.error('Failed to parse wizard data from sessionStorage', e);
+      return initialState;
+    }
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify(data));
+  }, [data]);
+
+  return [data, setData] as const;
+}
+
 export function WizardProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<WizardData>(initialData);
+  const [data, setData] = useWizardPersistence(initialData);
 
   const setFormalite = useCallback((f: { id: string; name: string; type: string; price_ht: number; tva_rate: number }) =>
     setData(prev => ({ 
       ...prev, formaliteId: f.id, formaliteName: f.name, 
       formaliteType: f.type, formalitePriceHT: f.price_ht, formaliteTvaRate: f.tva_rate 
-    })), []);
+    })), [setData]);
 
   const setCompanyInfo = useCallback((info: CompanyInfo) =>
-    setData(prev => ({ ...prev, companyInfo: info })), []);
+    setData(prev => ({ ...prev, companyInfo: info })), [setData]);
 
   const addDocument = useCallback((doc: WizardDocument) =>
-    setData(prev => ({ ...prev, documents: [...prev.documents, doc] })), []);
+    setData(prev => ({ ...prev, documents: [...prev.documents, doc] })), [setData]);
 
   const removeDocument = useCallback((id: string) =>
-    setData(prev => ({ ...prev, documents: prev.documents.filter(d => d.id !== id) })), []);
+    setData(prev => ({ ...prev, documents: prev.documents.filter(d => d.id !== id) })), [setData]);
 
   const setDocuments = useCallback((docs: WizardDocument[]) =>
-    setData(prev => ({ ...prev, documents: docs })), []);
+    setData(prev => ({ ...prev, documents: docs })), [setData]);
 
   const setDossierId = useCallback((id: string) =>
-    setData(prev => ({ ...prev, dossierId: id })), []);
+    setData(prev => ({ ...prev, dossierId: id })), [setData]);
 
-  const resetWizard = useCallback(() => setData(initialData), []);
+  const resetWizard = useCallback(() => {
+    setData(initialData);
+    sessionStorage.removeItem(WIZARD_STORAGE_KEY);
+  }, [setData]);
 
   const canProceedToStep = useCallback((step: number) => {
     if (step <= 1) return true;

@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { uploadAsset } from '../../lib/storage';
-import { useToast } from '../../components/ui/Toast';
+import { toast } from 'sonner';
 import { Save, Upload, Palette, Building2, FileText, X, Loader2 } from 'lucide-react';
 
 const SETTINGS_FIELDS = [
@@ -20,7 +20,6 @@ const SETTINGS_FIELDS = [
 ];
 
 export function AdminSettings() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [logoUploading, setLogoUploading] = useState(false);
@@ -57,10 +56,9 @@ export function AdminSettings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin_settings'] });
       queryClient.invalidateQueries({ queryKey: ['settings'] });
-      toast('success', 'Paramètres sauvegardés', 
-        'Mis à jour sur l\'ensemble du site');
+      toast.success(`Paramètres sauvegardés: Mis à jour sur l\'ensemble du site`);
     },
-    onError: (err: any) => toast('error', 'Erreur', err.message),
+    onError: (err: any) => toast.error(`Erreur: ${err.message}`),
   });
 
   const handleLogoUpload = async (file: File) => {
@@ -69,7 +67,7 @@ export function AdminSettings() {
     setLogoUploading(false);
 
     if (!result.success) {
-      toast('error', 'Erreur upload logo', result.error);
+      toast.error(`Erreur upload logo: ${result.error}`);
       return;
     }
 
@@ -77,7 +75,7 @@ export function AdminSettings() {
     setLocalSettings(prev => ({ ...prev, logo_url: result.url! }));
     queryClient.invalidateQueries({ queryKey: ['admin_settings'] });
     queryClient.invalidateQueries({ queryKey: ['settings'] });
-    toast('success', 'Logo mis à jour', 'Visible immédiatement sur le site');
+    toast.success(`Logo mis à jour: Visible immédiatement sur le site`);
   };
 
   const handleBrandColorSave = async () => {
@@ -85,7 +83,7 @@ export function AdminSettings() {
     // Applique la couleur en live
     document.documentElement.style.setProperty('--color-primary', brandColor);
     queryClient.invalidateQueries({ queryKey: ['admin_settings'] });
-    toast('success', 'Couleur mise à jour');
+    toast.success('Couleur mise à jour');
   };
 
   return (

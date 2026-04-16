@@ -300,11 +300,9 @@ async function startServer() {
     });
   });
 
-  // Serve static files if dist exists, otherwise use Vite dev server
-  const distPath = path.join(import.meta.dirname, 'dist');
-  const hasDist = fs.existsSync(distPath);
-
-  if (hasDist) {
+  // Serve static files in production, otherwise use Vite dev server
+  if (process.env.NODE_ENV === "production") {
+    const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));

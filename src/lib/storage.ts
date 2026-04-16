@@ -12,8 +12,24 @@ export interface UploadResult {
   path?: string;
 }
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+}
+
 export async function getDocumentUrl(pathOrUrl: string): Promise<string> {
-  if (!isSupabaseConfigured()) return pathOrUrl;
+  if (!isSupabaseConfigured()) {
+    if (pathOrUrl.startsWith('demo/')) {
+      const fileId = pathOrUrl.split('/')[1];
+      const base64 = sessionStorage.getItem(`demo_doc_${fileId}`);
+      if (base64) return base64;
+    }
+    return pathOrUrl;
+  }
   
   // Si c'est déjà une URL complète, on essaie d'extraire le chemin si c'est une URL Supabase
   let path = pathOrUrl;
@@ -51,10 +67,12 @@ export async function uploadDocument(
   fileId: string
 ): Promise<UploadResult> {
   if (!isSupabaseConfigured()) {
-    // Mode demo : retourner une URL fictive
+    // Mode demo : stocker en base64 pour éviter l'expiration
+    const base64 = await fileToBase64(file);
+    sessionStorage.setItem(`demo_doc_${fileId}`, base64);
     return { 
       success: true, 
-      url: URL.createObjectURL(file),
+      url: base64,
       path: `demo/${fileId}` 
     };
   }
@@ -99,7 +117,9 @@ export async function uploadDocument(
 
 export async function uploadAsset(file: File, name: string): Promise<UploadResult> {
   if (!isSupabaseConfigured()) {
-    return { success: true, url: URL.createObjectURL(file) };
+    const base64 = await fileToBase64(file);
+    sessionStorage.setItem(`demo_asset_${name}`, base64);
+    return { success: true, url: base64 };
   }
 
   try {
