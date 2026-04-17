@@ -22,6 +22,8 @@ export function DossiersList() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('all');
 
   const { data: dossiers, isLoading } = useQuery({
     queryKey: ['client_dossiers', user?.id],
@@ -38,10 +40,30 @@ export function DossiersList() {
   });
 
   const filtered = dossiers?.filter(d => {
+    // Search
     const q = search.toLowerCase();
-    return !q 
-      || d.reference?.toLowerCase().includes(q)
-      || (d.formalites_catalogue as any)?.name?.toLowerCase().includes(q);
+    const matchesSearch = !q || d.reference?.toLowerCase().includes(q) || (d.formalites_catalogue as any)?.name?.toLowerCase().includes(q);
+    
+    // Status
+    const matchesStatus = statusFilter === 'all' || d.status === statusFilter;
+    
+    // Date
+    let matchesDate = true;
+    if (dateFilter !== 'all') {
+      const date = new Date(d.created_at);
+      const now = new Date();
+      if (dateFilter === 'today') {
+        matchesDate = date.toDateString() === now.toDateString();
+      } else if (dateFilter === '7days') {
+        const pass = new Date(now.setDate(now.getDate() - 7));
+        matchesDate = date >= pass;
+      } else if (dateFilter === '30days') {
+        const pass = new Date(now.setDate(now.getDate() - 30));
+        matchesDate = date >= pass;
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesDate;
   }) ?? [];
 
   return (
@@ -62,14 +84,40 @@ export function DossiersList() {
       </header>
 
       <div className="p-4 md:p-8 max-w-5xl mx-auto w-full space-y-6">
-        {/* Barre de recherche */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher par référence ou formalité..."
-            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl 
-              text-sm focus:outline-none focus:border-primary focus:ring-2 
-              focus:ring-primary/10 transition-all shadow-sm" />
+        {/* En-tête avec filtres */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Rechercher par référence ou formalité..."
+              className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl 
+                text-sm focus:outline-none focus:border-primary focus:ring-2 
+                focus:ring-primary/10 transition-all shadow-sm" />
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="flex-1 md:flex-none px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm 
+                focus:outline-none focus:border-primary shadow-sm"
+            >
+              <option value="all">Tous statuts</option>
+              {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                <option key={key} value={key}>{config.label}</option>
+              ))}
+            </select>
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="flex-1 md:flex-none px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm 
+                focus:outline-none focus:border-primary shadow-sm"
+            >
+              <option value="all">Toutes dates</option>
+              <option value="today">Aujourd'hui</option>
+              <option value="7days">7 derniers jours</option>
+              <option value="30days">30 derniers jours</option>
+            </select>
+          </div>
         </div>
 
         {/* Alerts */}

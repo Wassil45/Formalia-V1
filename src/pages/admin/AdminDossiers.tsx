@@ -483,8 +483,10 @@ function DossierDrawer({ dossier, onClose }: { dossier: any; onClose: () => void
 export function AdminDossiers() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [dateFilter, setDateFilter] = useState<string | null>(null);
   const [selectedDossier, setSelectedDossier] = useState<any | null>(null);
   const [showFilter, setShowFilter] = useState(false);
+  const [showDateFilter, setShowDateFilter] = useState(false);
 
   const { data: dossiers, isLoading } = useQuery({
     queryKey: ['admin_dossiers_full'],
@@ -508,9 +510,24 @@ export function AdminDossiers() {
         || d.profiles?.first_name?.toLowerCase().includes(q)
         || d.profiles?.last_name?.toLowerCase().includes(q);
       const matchStatus = !statusFilter || d.status === statusFilter;
-      return matchSearch && matchStatus;
+      
+      let matchDate = true;
+      if (dateFilter) {
+        const date = new Date(d.created_at);
+        const now = new Date();
+        if (dateFilter === 'today') {
+          matchDate = date.toDateString() === now.toDateString();
+        } else if (dateFilter === '7days') {
+          const pass = new Date(now.setDate(now.getDate() - 7));
+          matchDate = date >= pass;
+        } else if (dateFilter === '30days') {
+          const pass = new Date(now.setDate(now.getDate() - 30));
+          matchDate = date >= pass;
+        }
+      }
+      return matchSearch && matchStatus && matchDate;
     });
-  }, [dossiers, search, statusFilter]);
+  }, [dossiers, search, statusFilter, dateFilter]);
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
@@ -528,6 +545,36 @@ export function AdminDossiers() {
                 className="w-full sm:w-56 pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 
                   rounded-xl text-sm focus:outline-none focus:border-primary 
                   focus:ring-2 focus:ring-primary/10 focus:bg-white transition-all" />
+            </div>
+            <div className="relative">
+              <button onClick={() => setShowDateFilter(!showDateFilter)}
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm 
+                  font-medium border transition-all ${dateFilter 
+                    ? 'border-primary/30 bg-primary/8 text-primary' 
+                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                <Clock className="w-4 h-4" />
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+              {showDateFilter && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl 
+                  border border-slate-100 overflow-hidden z-20 animate-scale-in">
+                  {[
+                    { value: null, label: 'Toutes les dates' },
+                    { value: 'today', label: "Aujourd'hui" },
+                    { value: '7days', label: '7 derniers jours' },
+                    { value: '30days', label: '30 derniers jours' }
+                  ].map(f => (
+                    <button key={String(f.value)}
+                      onClick={() => { setDateFilter(f.value); setShowDateFilter(false); }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                        dateFilter === f.value 
+                          ? 'bg-primary/8 text-primary font-medium' 
+                          : 'text-slate-700 hover:bg-slate-50'}`}>
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="relative">
               <button onClick={() => setShowFilter(!showFilter)}
@@ -559,14 +606,14 @@ export function AdminDossiers() {
       </header>
 
       <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
           <div className="overflow-x-auto">
-            <table className="w-full text-left min-w-[700px]">
+            <table className="w-full text-left min-w-[800px]">
               <thead>
                 <tr className="border-b border-slate-50 bg-slate-50/50">
                   {['Référence', 'Client', 'Formalité', 'Montant', 'Date', 'Statut', ''].map(h => (
                     <th key={h} className="px-4 md:px-6 py-3.5 text-xs font-semibold 
-                      text-slate-400 uppercase tracking-wider">{h}</th>
+                      text-slate-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -590,12 +637,12 @@ export function AdminDossiers() {
                           ${d.status === 'pending_documents' ? 'border-l-4 border-l-amber-400' : ''}`}
                         onClick={() => setSelectedDossier(d)}
                       >
-                        <td className="px-4 md:px-6 py-4">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="text-sm font-mono font-semibold text-slate-700">
                             {d.reference}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2.5">
                             <div className="w-7 h-7 gradient-primary rounded-lg flex items-center 
                               justify-center text-white text-xs font-bold flex-shrink-0">
@@ -611,12 +658,12 @@ export function AdminDossiers() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 md:px-6 py-4">
-                          <span className="text-sm text-slate-700 truncate max-w-[150px] block">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm text-slate-700 truncate max-w-[200px] block">
                             {d.formalites_catalogue?.name}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="text-sm font-semibold text-slate-900">
                             {d.total_amount 
                               ? d.total_amount.toLocaleString('fr-FR', 
@@ -624,21 +671,21 @@ export function AdminDossiers() {
                               : '—'}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="text-sm text-slate-500">
                             {new Date(d.created_at).toLocaleDateString('fr-FR', {
                               day: '2-digit', month: 'short'
                             })}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 
                             rounded-lg text-xs font-semibold ${config?.bg} ${config?.color}`}>
                             <Icon className="w-3 h-3" />
                             {config?.label}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                           <Eye className="w-4 h-4 text-slate-300 group-hover:text-primary 
                             transition-colors" />
                         </td>

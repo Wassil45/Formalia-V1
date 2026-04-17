@@ -61,7 +61,9 @@ const PageLoader = () => (
 
 function AppContent() {
   const location = useLocation();
-  const hideHeader = location.pathname.startsWith('/formalite');
+  const hideHeader = location.pathname.startsWith('/formalite') || 
+                     location.pathname.startsWith('/dashboard') || 
+                     location.pathname.startsWith('/admin');
   
   return (
     <>

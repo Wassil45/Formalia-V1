@@ -70,34 +70,35 @@ export function Dashboard() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto w-full space-y-8 animate-fade-in-up">
-      
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            {greeting}, {profile?.first_name} 👋
-          </h1>
-          <p className="text-slate-500 mt-1">
-            Bienvenue sur votre espace personnel {settings?.company_name || 'Formalia'}.
-          </p>
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6 sm:space-y-8 animate-fade-in-up">
+        
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">
+              {greeting}, {profile?.first_name} 👋
+            </h1>
+            <p className="text-slate-500 mt-1">
+              Bienvenue sur votre espace personnel {settings?.company_name || 'Formalia'}.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/formalite')}
+            className="flex items-center gap-2 px-5 py-2.5 gradient-primary text-white 
+              text-sm font-bold rounded-xl shadow-md shadow-primary/20 
+              hover:shadow-lg hover:-translate-y-0.5 transition-all w-fit"
+          >
+            <Plus className="w-4 h-4" />
+            Nouveau dossier
+          </button>
         </div>
-        <button
-          onClick={() => navigate('/formalite')}
-          className="flex items-center gap-2 px-5 py-2.5 gradient-primary text-white 
-            text-sm font-bold rounded-xl shadow-md shadow-primary/20 
-            hover:shadow-lg hover:-translate-y-0.5 transition-all w-fit"
-        >
-          <Plus className="w-4 h-4" />
-          Nouveau dossier
-        </button>
-      </div>
 
       {/* Alert Banner */}
       {pendingDossier && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-amber-50 border border-amber-200 
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-amber-50 border border-amber-200 
           rounded-2xl animate-fade-in-up">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
             <p className="text-sm text-amber-800">
               <strong>Action requise</strong> sur le dossier{' '}
@@ -107,8 +108,8 @@ export function Dashboard() {
           </div>
           <button 
             onClick={() => navigate(`/dashboard/dossiers/${pendingDossier.id}`)}
-            className="sm:ml-auto whitespace-nowrap px-4 py-2 bg-amber-500 text-white 
-            text-xs font-bold rounded-xl hover:bg-amber-600 transition-all w-fit"
+            className="whitespace-nowrap px-4 py-2 text-center bg-amber-500 text-white 
+            text-xs font-bold rounded-xl hover:bg-amber-600 transition-all w-full sm:w-fit"
           >
             Voir le dossier
           </button>
@@ -116,7 +117,7 @@ export function Dashboard() {
       )}
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {isLoading ? (
           [1,2,3,4].map(i => <SkeletonCard key={i} />)
         ) : [
@@ -152,19 +153,28 @@ export function Dashboard() {
         ))}
       </div>
 
-      {/* Table */}
+      {/* Table (Desktop) / Cards (Mobile) */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="px-6 py-5 border-b border-slate-50">
+        <div className="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-50 flex justify-between items-center">
           <h2 className="font-bold text-slate-900">Dossiers récents</h2>
+          {dossiers && dossiers.length > 5 && (
+            <button 
+              onClick={() => navigate('/dashboard/dossiers')}
+              className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors hidden sm:block"
+            >
+              Voir tous
+            </button>
+          )}
         </div>
         
-        <div className="overflow-x-auto">
+        {/* Vue Desktop */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-50 bg-slate-50/50">
                 {['Référence', 'Type', 'Date', 'Statut', 'Montant', 'Actions'].map(h => (
                   <th key={h} className="px-6 py-3.5 text-xs font-semibold text-slate-400 
-                    uppercase tracking-wider">{h}</th>
+                    uppercase tracking-wider whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -192,7 +202,7 @@ export function Dashboard() {
               ) : (
                 dossiers?.slice(0, 5).map((d) => (
                   <tr key={d.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm font-mono font-semibold text-slate-700">
                         {d.reference}
                       </span>
@@ -202,24 +212,24 @@ export function Dashboard() {
                         {d.formalites_catalogue?.name || 'Formalité'}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-slate-500">
                         {new Date(d.created_at).toLocaleDateString('fr-FR', { 
                           day: '2-digit', month: 'short', year: 'numeric'
                         })}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={d.status} />
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm font-semibold text-slate-900">
                         {d.total_amount != null
                           ? d.total_amount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
                           : '—'}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => navigate(`/dashboard/dossiers/${d.id}`)}
                         className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
@@ -233,11 +243,64 @@ export function Dashboard() {
             </tbody>
           </table>
         </div>
+
+        {/* Vue Mobile (Cartes) */}
+        <div className="block sm:hidden divide-y divide-slate-50">
+          {isLoading ? (
+            <div className="p-4 space-y-4">
+              {[1,2,3].map(i => <SkeletonCard key={i} />)}
+            </div>
+          ) : dossiers?.length === 0 ? (
+            <div className="px-4 py-12 text-center">
+              <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <FileText className="w-6 h-6 text-slate-300" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-900 mb-1">Aucun dossier</h3>
+              <p className="text-xs text-slate-500 mb-5">Vous n'avez pas encore créé de dossier.</p>
+              <button
+                onClick={() => navigate('/formalite')}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 
+                  text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Créer ma première formalité
+              </button>
+            </div>
+          ) : (
+            <div className="p-4 space-y-3">
+              {dossiers?.slice(0, 5).map((d) => (
+                <div key={d.id} onClick={() => navigate(`/dashboard/dossiers/${d.id}`)}
+                  className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm active:bg-slate-50 transition-colors">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-xs font-mono font-semibold text-slate-500">{d.reference}</span>
+                    <StatusBadge status={d.status} />
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-900 mb-1 leading-tight">
+                    {d.formalites_catalogue?.name || 'Formalité'}
+                  </h4>
+                  <div className="flex justify-between items-center mt-3">
+                    <span className="text-xs text-slate-500">
+                      {new Date(d.created_at).toLocaleDateString('fr-FR', { 
+                        day: '2-digit', month: 'short', year: 'numeric'
+                      })}
+                    </span>
+                    <span className="text-sm font-bold text-slate-900">
+                      {d.total_amount != null
+                        ? d.total_amount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
+                        : '—'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {dossiers && dossiers.length > 5 && (
-          <div className="px-6 py-4 border-t border-slate-50 bg-slate-50/50 text-center">
+          <div className="px-6 py-4 border-t border-slate-50 bg-slate-50/50 text-center sm:hidden">
             <button 
               onClick={() => navigate('/dashboard/dossiers')}
-              className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors w-full"
             >
               Voir tous mes dossiers
             </button>
@@ -246,21 +309,21 @@ export function Dashboard() {
       </div>
 
       {/* Help Section */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 
-        flex flex-col sm:flex-row items-center gap-6">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-6 
+        flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
         <div className="flex-1">
           <h3 className="font-semibold text-slate-900 mb-1">Besoin d'aide ?</h3>
           <p className="text-sm text-slate-500">
             Notre équipe est disponible du lundi au vendredi, de 9h à 18h.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/faq')} className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm 
-            font-medium text-slate-700 hover:bg-slate-50 transition-all">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+          <button onClick={() => navigate('/faq')} className="w-full sm:w-auto px-4 py-2.5 border border-slate-200 rounded-xl text-sm 
+            font-medium text-slate-700 hover:bg-slate-50 transition-all text-center">
             Voir la FAQ
           </button>
           <a href={`mailto:${settings?.email_contact || 'contact@formalia.fr'}`} 
-            className="flex items-center gap-2 px-4 py-2.5 gradient-primary text-white 
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 gradient-primary text-white 
               rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all">
             <Mail className="w-4 h-4" />
             Nous contacter
@@ -268,6 +331,7 @@ export function Dashboard() {
         </div>
       </div>
 
+    </div>
     </div>
   );
 }

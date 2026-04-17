@@ -47,29 +47,30 @@ export function ClientSettings() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
+      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Paramètres</h1>
-          <p className="text-slate-500 mt-1">Gérez vos informations personnelles et vos préférences.</p>
+          <h1 className="text-xl font-bold text-slate-900">Paramètres</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Gérez vos informations personnelles et vos préférences.</p>
         </div>
-      </div>
+      </header>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
-        <div className="flex items-center gap-4 mb-8 pb-8 border-b border-slate-100">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-xl font-bold text-blue-600 uppercase">
-            {profile?.first_name?.[0] || ''}{profile?.last_name?.[0] || ''}
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">{profile?.first_name} {profile?.last_name}</h2>
-            <p className="text-slate-500">{profile?.role === 'admin' ? 'Administrateur' : 'Client'}</p>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="p-4 sm:p-8 max-w-4xl mx-auto w-full">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-slate-100">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-xl font-bold text-blue-600 uppercase flex-shrink-0">
+              {profile?.first_name?.[0] || ''}{profile?.last_name?.[0] || ''}
+            </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Prénom *</label>
+              <h2 className="text-xl font-bold text-slate-900">{profile?.first_name} {profile?.last_name}</h2>
+              <p className="text-slate-500">{profile?.role === 'admin' ? 'Administrateur' : 'Client'}</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Prénom *</label>
               <input 
                 type="text" 
                 name="first_name"
@@ -173,7 +174,7 @@ export function ClientSettings() {
             <button 
               type="submit"
               disabled={updateProfileMutation.isPending}
-              className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {updateProfileMutation.isPending ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -185,6 +186,7 @@ export function ClientSettings() {
           </div>
         </form>
       </div>
+    </div>
     </div>
   );
 }

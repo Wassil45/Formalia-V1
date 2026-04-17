@@ -72,27 +72,27 @@ export function AdminDashboard() {
     <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
 
       {/* Header */}
-      <header className="bg-white border-b border-slate-100 px-8 py-5 sticky top-0 z-10">
-        <div className="flex items-center justify-between">
+      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-slate-900">Vue d'ensemble</h1>
             <p className="text-sm text-slate-500 mt-0.5">Gérez l'activité de la plateforme</p>
           </div>
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Rechercher..."
               className="pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl 
-                text-sm w-64 focus:outline-none focus:border-primary focus:ring-2 
+                text-sm w-full sm:w-64 focus:outline-none focus:border-primary focus:ring-2 
                 focus:ring-primary/10 focus:bg-white transition-all"
             />
           </div>
         </div>
       </header>
 
-      <div className="p-8 space-y-8 max-w-7xl mx-auto w-full">
+      <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full">
 
         {isError && (
           <div className="mb-6 flex items-center gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
@@ -102,7 +102,7 @@ export function AdminDashboard() {
         )}
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {isLoading ? (
             [1,2,3,4].map(i => <SkeletonCard key={i} />)
           ) : [
@@ -136,30 +136,32 @@ export function AdminDashboard() {
         </div>
 
         {/* Tableau */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+          <div className="px-4 sm:px-6 py-4 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="font-bold text-slate-900">Dossiers à traiter</h2>
               <p className="text-xs text-slate-400 mt-0.5">{filtered.length} résultat(s)</p>
             </div>
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <button
                 onClick={() => setShowFilterMenu(!showFilterMenu)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm 
-                  font-medium border transition-all ${
+                className={`flex items-center justify-between sm:justify-start gap-2 px-3.5 py-2 rounded-xl text-sm 
+                  font-medium border transition-all w-full sm:w-auto ${
                   filterStatus 
                     ? 'border-primary/30 bg-primary/8 text-primary' 
                     : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                <Filter className="w-3.5 h-3.5" />
-                {filterStatus 
-                  ? STATUS_FILTERS.find(f => f.value === filterStatus)?.label 
-                  : 'Filtrer'}
+                <div className="flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5" />
+                  {filterStatus 
+                    ? STATUS_FILTERS.find(f => f.value === filterStatus)?.label 
+                    : 'Filtrer'}
+                </div>
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>
               {showFilterMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl 
+                <div className="absolute right-0 mt-2 w-full sm:w-48 bg-white rounded-xl shadow-xl 
                   border border-slate-100 overflow-hidden z-20 animate-scale-in">
                   {STATUS_FILTERS.map(f => (
                     <button
@@ -180,12 +182,12 @@ export function AdminDashboard() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full min-w-[800px] text-left">
               <thead>
                 <tr className="border-b border-slate-50 bg-slate-50/50">
                   {['Référence', 'Client', 'Formalité', 'Date', 'Statut', ''].map(h => (
                     <th key={h} className="px-6 py-3.5 text-xs font-semibold text-slate-400 
-                      uppercase tracking-wider">{h}</th>
+                      uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -210,12 +212,12 @@ export function AdminDashboard() {
                         d.status === 'pending_documents' ? 'border-l-2 border-l-amber-400' : ''
                       }`}
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm font-mono font-semibold text-slate-700">
                           {d.reference}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2.5">
                           <div className="w-7 h-7 gradient-primary rounded-lg flex items-center 
                             justify-center text-white text-xs font-bold flex-shrink-0">
@@ -229,22 +231,22 @@ export function AdminDashboard() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-slate-700">
                           {d.formalites_catalogue?.name}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-slate-500">
                           {new Date(d.created_at).toLocaleDateString('fr-FR', { 
                             day: '2-digit', month: 'short' 
                           })}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <StatusBadge status={d.status} />
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => navigate(`/admin/dossiers/${d.id}`)}
                           className="opacity-0 group-hover:opacity-100 flex items-center 

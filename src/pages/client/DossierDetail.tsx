@@ -7,8 +7,9 @@ import { toast } from 'sonner';
 import { 
   ArrowLeft, FileText, Clock, CheckCircle2, AlertCircle, 
   XCircle, Send, Upload, File, X, Loader2,
-  MessageSquare, History, ExternalLink, Plus
+  MessageSquare, History, ExternalLink, Plus, Trash2
 } from 'lucide-react';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
 
 import { uploadDocument as uploadDocumentHelper, getDocumentUrl } from '../../lib/storage';
 
@@ -54,6 +55,27 @@ export function DossierDetail() {
     },
   });
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const deleteDossier = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('dossiers')
+        .delete()
+        .eq('id', id!)
+        .eq('client_id', user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Dossier annulé avec succès');
+      queryClient.invalidateQueries({ queryKey: ['client_dossiers'] });
+      navigate('/dashboard/dossiers');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Erreur lors de l'annulation du dossier");
+    }
+  });
+
   const handlePayment = async () => {
     try {
       setIsPaying(true);
@@ -75,7 +97,20 @@ export function DossierDetail() {
       }
 
       if (data.url) {
-        window.location.href = data.url;
+        if (window.top !== window.self) {
+          const newWindow = window.open(data.url, '_blank');
+          if (!newWindow) {
+             toast.error("Veuillez autoriser les pop-ups pour procéder au paiement.");
+             const link = document.createElement('a');
+             link.href = data.url;
+             link.target = '_blank';
+             link.click();
+          } else {
+             toast.info("Paiement ouvert dans un nouvel onglet.");
+          }
+        } else {
+          window.location.href = data.url;
+        }
       } else {
         throw new Error('Erreur lors de la création de la session de paiement');
       }
@@ -239,12 +274,22 @@ export function DossierDetail() {
               {(dossier.formalites_catalogue as any)?.name}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
+            {dossier.status === 'draft' && (
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="px-3 md:px-4 py-2 rounded-xl text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors flex items-center gap-2"
+                title="Annuler ce brouillon"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Annuler</span>
+              </button>
+            )}
             {(dossier.status === 'draft' || dossier.status === 'pending_documents') && (
               <button
                 onClick={() => navigate(`/formalite?dossierId=${dossier.id}`)}
                 className="px-4 py-2 rounded-xl text-sm font-bold text-slate-700 bg-slate-100
-                  transition-all hover:bg-slate-200"
+                  transition-all hover:bg-slate-200 flex items-center gap-2"
               >
                 Modifier
               </button>
@@ -477,6 +522,17 @@ export function DossierDetail() {
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={() => deleteDossier.mutate()}
+        title="Annuler le dossier"
+        message={`Êtes-vous sûr de vouloir supprimer le brouillon ${dossier.reference} ? Cette action est irréversible.`}
+        confirmText="Oui, annuler ce dossier"
+        cancelText="Conserver"
+        isDestructive={true}
+      />
     </div>
   );
 }

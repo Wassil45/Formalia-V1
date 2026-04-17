@@ -216,12 +216,12 @@ export function AdminSettings() {
               </div>
             )}
           </div>
-          <div className="px-6 pb-6 flex justify-end">
+          <div className="px-5 sm:px-6 pb-5 sm:pb-6 flex justify-end">
             <button
               onClick={() => saveAllSettings.mutate()}
               disabled={saveAllSettings.isPending}
-              className="flex items-center gap-2 px-6 py-3 gradient-primary text-white 
-                rounded-xl text-sm font-bold shadow-md shadow-primary/20 
+              className="flex items-center justify-center gap-2 px-6 py-3 gradient-primary text-white 
+                rounded-xl text-sm font-bold shadow-md shadow-primary/20 w-full sm:w-auto
                 hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-60"
             >
               <Save className="w-4 h-4" />

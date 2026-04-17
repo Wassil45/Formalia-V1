@@ -15,39 +15,42 @@ export function AdminStatistics() {
   const timeData = stats?.timeData || [];
 
   return (
-    <div className="flex flex-col gap-8 max-w-[1600px] mx-auto w-full">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 font-display">Statistiques & Performances</h2>
-          <p className="text-slate-500 mt-1 text-sm">Analysez l'activité et les revenus de la plateforme.</p>
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
+      <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 sticky top-0 z-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900 font-display">Statistiques & Performances</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Analysez l'activité et les revenus de la plateforme.</p>
+          </div>
+          
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-lg shadow-sm overflow-x-auto scrollbars-hidden">
+            {[
+              { id: 'today', label: "Aujourd'hui" },
+              { id: '7days', label: '7 jours' },
+              { id: '30days', label: '30 jours' },
+              { id: 'month', label: 'Ce mois' },
+              { id: 'year', label: 'Année' },
+            ].map(range => (
+              <button
+                key={range.id}
+                onClick={() => setDateRange(range.id)}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
+                  dateRange === range.id 
+                    ? 'bg-white text-primary shadow-sm border border-slate-200/50' 
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                {range.label}
+              </button>
+            ))}
+          </div>
         </div>
-        
-        <div className="flex items-center gap-2 bg-white border border-slate-200 p-1 rounded-lg shadow-sm">
-          {[
-            { id: 'today', label: "Aujourd'hui" },
-            { id: '7days', label: '7 jours' },
-            { id: '30days', label: '30 jours' },
-            { id: 'month', label: 'Ce mois' },
-            { id: 'year', label: 'Année' },
-          ].map(range => (
-            <button
-              key={range.id}
-              onClick={() => setDateRange(range.id)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                dateRange === range.id 
-                  ? 'bg-blue-50 text-blue-700' 
-                  : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              {range.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      </header>
 
-      {/* KPI ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div className="p-4 md:p-8 space-y-6 max-w-[1600px] mx-auto w-full">
+        {/* KPI ROW */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="bg-white p-5 md:p-6 rounded-2xl border border-slate-100 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
               <DollarSign className="w-5 h-5" />
@@ -195,6 +198,7 @@ export function AdminStatistics() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

@@ -44,61 +44,62 @@ export function ClientPayments() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6">
-      <div className="flex items-center justify-between mb-2">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
+      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 font-display">Mes paiements</h1>
-          <p className="text-slate-500 mt-1">Consultez l'historique de vos paiements et téléchargez vos factures.</p>
+          <h1 className="text-xl font-bold text-slate-900 font-display">Mes paiements</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Consultez l'historique de vos paiements et téléchargez vos factures.</p>
         </div>
-      </div>
+      </header>
 
-      {isLoading ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 flex justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      ) : !payments || payments.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
-          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CreditCard className="w-8 h-8 text-primary" />
+      <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto w-full">
+        {isLoading ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-          <h2 className="text-xl font-bold text-slate-900 mb-2">Aucun paiement</h2>
-          <p className="text-slate-500 max-w-md mx-auto">
-            L'historique de vos paiements et vos factures apparaîtront ici.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="px-6 py-4 text-sm font-semibold text-slate-900">Date</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-slate-900">Référence</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-slate-900">Prestation</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-slate-900">Montant</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-slate-900">Statut</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-slate-900 text-right">Facture</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {payments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      {new Date(payment.created_at).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-mono font-medium text-slate-900">
-                      {payment.reference}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      {payment.formalites_catalogue?.name}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                      {payment.total_amount} € TTC
-                    </td>
-                    <td className="px-6 py-4">
-                      {getPaymentStatusBadge(payment.stripe_payment_status)}
-                    </td>
-                    <td className="px-6 py-4 text-right">
+        ) : !payments || payments.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CreditCard className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Aucun paiement</h2>
+            <p className="text-slate-500 max-w-md mx-auto">
+              L'historique de vos paiements et vos factures apparaîtront ici.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Date</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Référence</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Prestation</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Montant</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Statut</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-slate-900 text-right whitespace-nowrap">Facture</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {payments.map((payment) => (
+                    <tr key={payment.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap">
+                        {new Date(payment.created_at).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-mono font-medium text-slate-900 whitespace-nowrap">
+                        {payment.reference}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap">
+                        {payment.formalites_catalogue?.name}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">
+                        {payment.total_amount} € TTC
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getPaymentStatusBadge(payment.stripe_payment_status)}
+                      </td>
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
                       <button 
                         disabled={payment.stripe_payment_status !== 'paid' && payment.stripe_payment_status !== 'succeeded'}
                         className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -114,6 +115,7 @@ export function ClientPayments() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }

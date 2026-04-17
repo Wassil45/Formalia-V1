@@ -91,7 +91,24 @@ export function WizardPayment() {
       }
 
       if (data.url) {
-        window.location.href = data.url;
+        // Stripe ne supporte pas l'affichage par défaut dans un Iframe (comme c'est le cas pour la preview AI Studio)
+        // On redirige donc dans un nouvel onglet ou on essaie de naviguer la top window.
+        if (window.top !== window.self) {
+          // Dans un iframe (ex: preview AI Studio)
+          const newWindow = window.open(data.url, '_blank');
+          if (!newWindow) {
+             toast.error("Le bloqueur de pop-up a empêché l'ouverture du paiement. Veuillez cliquer sur le lien pour continuer.");
+             // Fallback visuel avec un lien direct si le popup est bloqué
+             const link = document.createElement('a');
+             link.href = data.url;
+             link.target = '_blank';
+             link.click();
+          } else {
+             toast.info("La page de paiement s'est ouverte dans un nouvel onglet.");
+          }
+        } else {
+          window.location.href = data.url;
+        }
       } else {
         throw new Error('URL de paiement non reçue');
       }

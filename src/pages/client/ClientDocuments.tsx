@@ -51,13 +51,15 @@ export function ClientDocuments() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6">
-      <div className="flex items-center justify-between mb-2">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
+      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 font-display">Documents</h1>
-          <p className="text-slate-500 mt-1">Retrouvez tous vos documents officiels (Kbis, statuts, etc.).</p>
+          <h1 className="text-xl font-bold text-slate-900 font-display">Documents</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Retrouvez tous vos documents officiels (Kbis, statuts, etc.).</p>
         </div>
-      </div>
+      </header>
+
+      <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto w-full">
 
       {isLoading ? (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 flex justify-center">
@@ -111,6 +113,7 @@ export function ClientDocuments() {
           ))}
         </div>
       )}
+    </div>
     </div>
   );
 }

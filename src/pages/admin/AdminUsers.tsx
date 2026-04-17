@@ -159,7 +159,7 @@ export function AdminUsers() {
       <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {[
             { label: 'Total', value: stats.total, icon: Users, color: 'text-primary', bg: 'bg-primary/8' },
             { label: 'Clients', value: stats.clients, icon: UserCheck, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -177,14 +177,14 @@ export function AdminUsers() {
         </div>
 
         {/* Tableau responsive */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
           <div className="overflow-x-auto">
-            <table className="w-full text-left min-w-[600px]">
+            <table className="w-full text-left min-w-[800px]">
               <thead>
                 <tr className="border-b border-slate-50 bg-slate-50/50">
                   {['Utilisateur', 'Rôle', 'Dossiers', 'Inscrit le', 'Actions'].map(h => (
                     <th key={h} className="px-4 md:px-6 py-3.5 text-xs font-semibold 
-                      text-slate-400 uppercase tracking-wider">{h}</th>
+                      text-slate-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -218,7 +218,7 @@ export function AdminUsers() {
                     
                     return (
                       <tr key={user.id} className="hover:bg-slate-50/50 transition-colors group">
-                        <td className="px-4 md:px-6 py-4">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 gradient-primary rounded-xl flex items-center 
                               justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm">
@@ -234,7 +234,7 @@ export function AdminUsers() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 md:px-6 py-4">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 
                             rounded-lg text-xs font-semibold 
                             ${roleConfig?.bg} ${roleConfig?.color}`}>
@@ -242,19 +242,19 @@ export function AdminUsers() {
                             {roleConfig?.label}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="text-sm font-medium text-slate-700">
                             {dossierCounts?.[user.id] ?? 0}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="text-sm text-slate-500">
                             {new Date(user.created_at).toLocaleDateString('fr-FR', {
                               day: '2-digit', month: 'short', year: 'numeric'
                             })}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-1 opacity-0 
                             group-hover:opacity-100 transition-opacity">
                             <button

@@ -5,7 +5,7 @@ import { useSettings } from '../../hooks/useSettings';
 import { 
   LayoutGrid, FolderOpen, Package, Users, Settings, 
   LogOut, Scale, Menu, X, ChevronRight, Bell, HelpCircle, Mail,
-  BarChart2, Download, UserCircle
+  BarChart2, Download, UserCircle, Globe
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { to: '/admin/exports', label: 'Exports', icon: Download },
   { to: '/admin/parametres', label: 'Paramètres', icon: Settings },
   { to: '/admin/account', label: 'Mon compte', icon: UserCircle },
+  { to: '/', label: 'Retour au site', icon: Globe },
 ];
 
 export function AdminLayout() {
@@ -112,7 +113,7 @@ export function AdminLayout() {
   );
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 overflow-hidden pt-16 md:pt-20">
+    <div className="flex h-screen w-full bg-slate-50 overflow-hidden">
 
       {/* Sidebar desktop */}
       <aside className="hidden lg:flex w-60 flex-col bg-slate-900 shrink-0 h-full">

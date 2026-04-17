@@ -10,9 +10,14 @@ function HeroSection() {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-900">
-      {/* Background gradients */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] opacity-30 pointer-events-none">
+    <section 
+      className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-900 bg-[url('/bg-hero.jpg')] bg-cover bg-center"
+    >
+      {/* Overlay sombre pour garantir la lisibilité du texte par-dessus l'image */}
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px]" />
+
+      {/* Background gradients (Aura) */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] opacity-40 pointer-events-none mix-blend-screen z-0">
         <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-[100px]" />
       </div>
       
@@ -209,13 +214,17 @@ function BenefitsSection() {
               ))}
             </div>
           </div>
-          <div className="relative animate-fade-in-up">
-            <div className="aspect-square rounded-full bg-gradient-to-tr from-primary/20 to-secondary/20 blur-3xl absolute inset-0" />
+          <div className="relative animate-fade-in-up group">
+            <div className="aspect-[4/3] rounded-3xl bg-gradient-to-tr from-primary/30 to-secondary/30 blur-3xl absolute -inset-4 opacity-50 group-hover:opacity-70 transition-opacity duration-700" />
             <img 
-              src="https://images.unsplash.com/photo-1556761175-5973dc0f32d7?auto=format&fit=crop&w=800&q=80" 
-              alt={`Équipe ${companyName}`} 
-              className="relative rounded-2xl shadow-2xl border border-slate-100 object-cover aspect-[4/3]"
+              src="/equipe.jpg" 
+              alt={`Équipe ${companyName} - Teamwork`} 
+              className="relative w-full rounded-2xl shadow-2xl border border-white/50 object-cover aspect-[4/3] group-hover:-translate-y-1 transition-transform duration-500"
               referrerPolicy="no-referrer"
+              onError={(e) => {
+                // Fallback si l'image n'est pas encore uploadée manuellement
+                (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80";
+              }}
             />
           </div>
         </div>

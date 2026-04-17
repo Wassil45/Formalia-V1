@@ -348,8 +348,8 @@ export function AdminProducts() {
     <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
 
       {/* Header */}
-      <header className="bg-white border-b border-slate-100 px-8 py-5 sticky top-0 z-10">
-        <div className="flex items-center justify-between">
+      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-slate-900">Catalogue des services</h1>
             <p className="text-sm text-slate-500 mt-0.5">
@@ -358,9 +358,9 @@ export function AdminProducts() {
           </div>
           <button
             onClick={() => setModal({ open: true })}
-            className="flex items-center gap-2 px-4 py-2.5 gradient-primary text-white 
+            className="flex items-center justify-center gap-2 px-4 py-2.5 gradient-primary text-white 
               text-sm font-semibold rounded-xl shadow-md shadow-primary/20 
-              hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              hover:shadow-lg hover:-translate-y-0.5 transition-all w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" />
             Nouveau service
@@ -368,7 +368,7 @@ export function AdminProducts() {
         </div>
       </header>
 
-      <div className="p-8 space-y-6 max-w-7xl mx-auto w-full">
+      <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto w-full">
 
         {isError && (
           <div className="mb-6 flex items-center gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
@@ -379,12 +379,12 @@ export function AdminProducts() {
 
         {/* Filtres */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 
-          flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+           flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbars-hidden w-full md:w-auto">
             {[null, ...Object.keys(TYPE_LABELS)].map(type => (
               <button key={String(type)}
                 onClick={() => setActiveFilter(type)}
-                className={`px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                className={`flex-shrink-0 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
                   activeFilter === type 
                     ? 'bg-primary text-white shadow-sm' 
                     : 'text-slate-600 hover:bg-slate-50'
@@ -395,28 +395,29 @@ export function AdminProducts() {
               </button>
             ))}
           </div>
-          <div className="relative">
+          <div className="relative w-full md:w-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Rechercher..."
               className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl 
-                text-sm w-52 focus:outline-none focus:border-primary focus:ring-2 
+                text-sm w-full md:w-52 focus:outline-none focus:border-primary focus:ring-2 
                 focus:ring-primary/10 focus:bg-white transition-all" />
           </div>
         </div>
 
         {/* Tableau */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-slate-50 bg-slate-50/50">
-                {['Service', 'Catégorie', 'Prix HT', 'TVA', 'Délai', 'Statut', 'Actions'].map(h => (
-                  <th key={h} className="px-6 py-3.5 text-xs font-semibold text-slate-400 
-                    uppercase tracking-wider">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px] text-left">
+              <thead>
+                <tr className="border-b border-slate-50 bg-slate-50/50">
+                  {['Service', 'Catégorie', 'Prix HT', 'TVA', 'Délai', 'Statut', 'Actions'].map(h => (
+                    <th key={h} className="px-6 py-3.5 text-xs font-semibold text-slate-400 
+                      uppercase tracking-wider whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
               {isLoading ? (
                 [1,2,3].map(i => <SkeletonRow key={i} />)
               ) : filtered.length === 0 ? (
@@ -428,7 +429,7 @@ export function AdminProducts() {
               ) : (
                 filtered.map(p => (
                   <tr key={p.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-primary/8 rounded-xl flex items-center 
                           justify-center flex-shrink-0">
@@ -442,27 +443,27 @@ export function AdminProducts() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg 
                         ${TYPE_COLORS[p.type as keyof typeof TYPE_COLORS]}`}>
                         {TYPE_LABELS[p.type as keyof typeof TYPE_LABELS]}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm font-semibold text-slate-900">
                         {p.price_ht.toLocaleString('fr-FR', 
                           { style: 'currency', currency: 'EUR' })}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-slate-600">{p.tva_rate}%</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-slate-600">
                         {p.estimated_delay_days ? `${p.estimated_delay_days}j` : '—'}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => toggleActive.mutate({ id: p.id, is_active: !p.is_active })}
                         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg 
@@ -478,7 +479,7 @@ export function AdminProducts() {
                         }
                       </button>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 
                         transition-opacity">
                         <button
@@ -502,6 +503,7 @@ export function AdminProducts() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 
