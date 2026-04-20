@@ -3,14 +3,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { MOCK_SERVICES } from '../../data/mockServices';
 import { toast } from 'sonner';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { SkeletonRow } from '../../components/ui/Skeleton';
 import { FormBuilder } from '../../components/admin/FormBuilder';
+import * as Icons from 'lucide-react';
 import { 
   Plus, Search, Edit, Trash2, Package, X, 
-  AlertTriangle, ToggleLeft, ToggleRight, Eye, EyeOff, Info
+  AlertTriangle, ToggleLeft, ToggleRight, Eye, EyeOff, Info,
+  FilePlus, ArrowUp, ArrowDown
 } from 'lucide-react';
 
 const productSchema = z.object({
@@ -23,6 +25,13 @@ const productSchema = z.object({
   is_active: z.boolean().default(true),
   order_index: z.coerce.number().default(0),
   icon: z.string().default('FileText'),
+  iconColor: z.string().optional(),
+  intro_text: z.string().optional(),
+  required_documents: z.array(z.object({
+    id: z.string(),
+    label: z.string().min(1, 'Requis'),
+    hint: z.string().optional()
+  })).optional(),
   form_schema: z.any().optional(),
 });
 type ProductForm = z.infer<typeof productSchema>;
@@ -38,6 +47,90 @@ const TYPE_COLORS = {
   radiation: 'bg-red-100 text-red-700',
 };
 
+const AVAILABLE_COLORS = [
+  { label: 'Bleu', value: 'text-blue-500' },
+  { label: 'Violet', value: 'text-purple-500' },
+  { label: 'Vert', value: 'text-emerald-500' },
+  { label: 'Orange', value: 'text-orange-500' },
+  { label: 'Rose', value: 'text-pink-500' },
+  { label: 'Gris', value: 'text-slate-500' },
+];
+
+const formatIconName = (name: string) => {
+  if (!name) return 'FileText';
+  return name.trim().split(/[-_ ]+/).map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join('');
+};
+
+function DocsBuilder({ control, register, errors }: any) {
+  const { fields, append, remove, move } = useFieldArray({
+    control,
+    name: "required_documents",
+  });
+
+  const inputCls = (err: boolean) => `w-full px-3.5 py-2.5 rounded-xl border text-sm 
+    outline-none transition-all ${err 
+      ? 'border-red-300 bg-red-50/50 focus:ring-2 focus:ring-red-100' 
+      : 'border-slate-200 bg-white focus:border-primary focus:ring-2 focus:ring-primary/10'
+    }`;
+
+  return (
+    <div className="space-y-4">
+      {fields.map((item, index) => (
+        <div key={item.id} className="p-4 bg-slate-50 border border-slate-100 rounded-xl relative group">
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button type="button" onClick={() => index > 0 && move(index, index - 1)}
+              className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-700">
+              <ArrowUp className="w-3.5 h-3.5" />
+            </button>
+            <button type="button" onClick={() => index < fields.length - 1 && move(index, index + 1)}
+              className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-700">
+              <ArrowDown className="w-3.5 h-3.5" />
+            </button>
+            <button type="button" onClick={() => remove(index)}
+              className="p-1.5 rounded-lg text-red-400 hover:bg-red-100 hover:text-red-600">
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <input type="hidden" {...register(`required_documents.${index}.id`)} />
+                <label className="text-xs font-medium text-slate-600 mb-1 block">Titre (requis)</label>
+                <input 
+                  {...register(`required_documents.${index}.label`)} 
+                  className={inputCls(!!errors?.required_documents?.[index]?.label)}
+                  placeholder="Ex: Pièce d'identité"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-600 mb-1 block">Description (optionnel)</label>
+              <input 
+                {...register(`required_documents.${index}.hint`)} 
+                className={inputCls(false)}
+                placeholder="Ex: CNI, passeport ou titre de séjour"
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={() => append({ id: Math.random().toString(36).slice(2, 9), label: '', hint: '' })}
+        className="w-full py-3 rounded-xl border-2 border-dashed border-slate-200 
+          text-sm font-medium text-slate-500 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all flex items-center justify-center gap-2"
+      >
+        <FilePlus className="w-4 h-4" />
+        Ajouter une pièce justificative
+      </button>
+    </div>
+  );
+}
+
 function ProductModal({ 
   product, onClose 
 }: { 
@@ -46,22 +139,67 @@ function ProductModal({
   const queryClient = useQueryClient();
   const isEdit = !!product;
 
-  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = 
+  const initialIconParts = (product?.icon || 'FileText').split(':');
+  const initialIconName = formatIconName(initialIconParts[0]);
+  const initialIconColor = initialIconParts[1] || 'text-slate-500';
+
+  const initialIntroText = typeof product?.required_documents === 'string' 
+    ? product.required_documents 
+    : (product?.required_documents as any)?.text || '';
+    
+  const initialDocsSchema = (product?.required_documents as any)?.docs || [];
+
+  const { register, handleSubmit, watch, setValue, control, formState: { errors, isSubmitting } } = 
     useForm<ProductForm>({
       resolver: zodResolver(productSchema) as any,
-      defaultValues: product ?? { tva_rate: 20, is_active: true, type: 'immatriculation', form_schema: null },
+      defaultValues: product ? { 
+        ...product, 
+        icon: initialIconName,
+        iconColor: initialIconColor,
+        intro_text: initialIntroText,
+        required_documents: initialDocsSchema
+      } : { 
+        tva_rate: 20, 
+        is_active: true, 
+        type: 'immatriculation', 
+        form_schema: null,
+        icon: 'FileText',
+        iconColor: 'text-slate-500',
+        intro_text: '',
+        required_documents: []
+      },
     });
 
   const isActive = watch('is_active');
   const prixHT = watch('price_ht') ?? 0;
   const tva = watch('tva_rate') ?? 20;
   const prixTTC = +(prixHT * (1 + tva / 100)).toFixed(2);
+  
+  // Preview Icône
+  const rawIconName = watch('icon');
+  const previewIconName = formatIconName(rawIconName);
+  const previewIconColor = watch('iconColor') || 'text-slate-500';
+  const PreviewIconComponent = (Icons as any)[previewIconName] || Icons.HelpCircle;
 
   const mutation = useMutation({
     mutationFn: async (data: ProductForm) => {
+      const cleanIconName = formatIconName(data.icon);
+      const finalIcon = data.iconColor && data.iconColor !== 'text-slate-500' 
+        ? `${cleanIconName}:${data.iconColor}`
+        : cleanIconName; // On garde la compatibilité si c'est gris par défaut
+
       const payload = { 
-        ...data, 
+        name: data.name,
+        type: data.type,
+        description: data.description,
+        price_ht: data.price_ht,
+        tva_rate: data.tva_rate,
+        estimated_delay_days: data.estimated_delay_days,
+        is_active: data.is_active,
+        order_index: data.order_index,
+        icon: finalIcon,
         price_ttc: prixTTC,
+        required_documents: { text: data.intro_text, docs: data.required_documents },
         form_schema: data.form_schema,
         steps_config: data.form_schema, // compatibilité
       };
@@ -215,21 +353,65 @@ function ProductModal({
           </div>
 
           {/* Ordre et Icône */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <div>
               <label className="text-sm font-medium text-slate-700 mb-1.5 block">
-                Ordre d'affichage
+                Ordre
               </label>
               <input {...register('order_index')} type="number"
                 className={inputCls(false)} placeholder="0" />
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700 mb-1.5 block">
-                Icône (Lucide)
+              <label className="text-sm font-medium text-slate-700 mb-1.5 block flex justify-between">
+                Icône <span className="font-normal text-slate-400 text-xs">Aperçu :</span>
               </label>
-              <input {...register('icon')} type="text"
-                className={inputCls(false)} placeholder="FileText" />
+              <div className="relative">
+                <input {...register('icon')} type="text"
+                  className={`${inputCls(false)} pl-11`} placeholder="File text" />
+                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                  <PreviewIconComponent className={`w-5 h-5 ${previewIconColor}`} />
+                </div>
+              </div>
             </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1.5 block">
+                Couleur de l'icône
+              </label>
+              <select {...register('iconColor')} className={inputCls(false)}>
+                {AVAILABLE_COLORS.map(c => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-100 pt-4 mt-4">
+            <label className="text-sm font-semibold text-slate-800 block mb-1">
+              Introduction
+            </label>
+            <p className="text-xs text-slate-400 mb-3">
+              Ce texte d'introduction sera affiché au client avant qu'il ne commence à remplir le formulaire.
+            </p>
+            <textarea {...register('intro_text')} rows={2} 
+              className={inputCls(false) + ' resize-none'}
+              placeholder="Ex: Merci de bien vouloir remplir ce formulaire avec attention..." />
+          </div>
+
+          {/* Configuration des documents requis */}
+          <div className="border-t border-slate-100 pt-4 mt-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <label className="text-sm font-semibold text-slate-800">
+                  Pièces justificatives
+                </label>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Configurez les documents que le client devra télécharger
+                </p>
+              </div>
+            </div>
+            
+            <DocsBuilder control={control} register={register} errors={errors} />
+            
           </div>
 
           <div className="border-t border-slate-100 pt-4 mt-4">
@@ -345,14 +527,14 @@ export function AdminProducts() {
   }, [products, search, activeFilter]);
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
 
       {/* Header */}
-      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">Catalogue des services</h1>
-            <p className="text-sm text-slate-500 mt-0.5">
+      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-slate-900 truncate">Catalogue des services</h1>
+            <p className="text-sm text-slate-500 mt-0.5 truncate">
               Toute modification est visible en temps réel sur le site client
             </p>
           </div>
@@ -360,7 +542,7 @@ export function AdminProducts() {
             onClick={() => setModal({ open: true })}
             className="flex items-center justify-center gap-2 px-4 py-2.5 gradient-primary text-white 
               text-sm font-semibold rounded-xl shadow-md shadow-primary/20 
-              hover:shadow-lg hover:-translate-y-0.5 transition-all w-full sm:w-auto"
+              hover:shadow-lg hover:-translate-y-0.5 transition-all w-full sm:w-auto shrink-0"
           >
             <Plus className="w-4 h-4" />
             Nouveau service
@@ -368,7 +550,7 @@ export function AdminProducts() {
         </div>
       </header>
 
-      <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto w-full">
+      <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
 
         {isError && (
           <div className="mb-6 flex items-center gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
@@ -379,7 +561,7 @@ export function AdminProducts() {
 
         {/* Filtres */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 
-           flex flex-col md:flex-row md:items-center justify-between gap-4">
+           flex flex-col md:flex-row md:items-center justify-between gap-4 w-full min-w-0">
           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbars-hidden w-full md:w-auto">
             {[null, ...Object.keys(TYPE_LABELS)].map(type => (
               <button key={String(type)}
@@ -395,7 +577,7 @@ export function AdminProducts() {
               </button>
             ))}
           </div>
-          <div className="relative w-full md:w-auto">
+          <div className="relative w-full md:w-auto shrink-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Rechercher..."
@@ -406,7 +588,7 @@ export function AdminProducts() {
         </div>
 
         {/* Tableau */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden w-full min-w-0 flex flex-col">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[800px] text-left">
               <thead>
@@ -427,13 +609,19 @@ export function AdminProducts() {
                   </td>
                 </tr>
               ) : (
-                filtered.map(p => (
+                filtered.map(p => {
+                  const iconParts = (p.icon || 'FileText').split(':');
+                  const iconName = iconParts[0];
+                  const iconColorClass = iconParts[1] || 'text-primary';
+                  const IconComponent = (Icons as any)[iconName] ? (Icons as any)[iconName] : Icons.Package;
+
+                  return (
                   <tr key={p.id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-primary/8 rounded-xl flex items-center 
                           justify-center flex-shrink-0">
-                          <Package className="w-4 h-4 text-primary" />
+                          <IconComponent className={`w-4 h-4 ${iconColorClass}`} />
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-slate-900">{p.name}</p>
@@ -499,7 +687,8 @@ export function AdminProducts() {
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

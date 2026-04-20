@@ -69,30 +69,30 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
 
       {/* Header */}
-      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">Vue d'ensemble</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Gérez l'activité de la plateforme</p>
+      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-slate-900 truncate">Vue d'ensemble</h1>
+            <p className="text-sm text-slate-500 mt-0.5 truncate">Gérez l'activité de la plateforme</p>
           </div>
-          <div className="relative w-full sm:w-auto">
+          <div className="relative w-full sm:w-auto sm:max-w-xs shrink-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Rechercher..."
               className="pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl 
-                text-sm w-full sm:w-64 focus:outline-none focus:border-primary focus:ring-2 
+                text-sm w-full focus:outline-none focus:border-primary focus:ring-2 
                 focus:ring-primary/10 focus:bg-white transition-all"
             />
           </div>
         </div>
       </header>
 
-      <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full">
+      <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full min-w-0">
 
         {isError && (
           <div className="mb-6 flex items-center gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
@@ -102,7 +102,7 @@ export function AdminDashboard() {
         )}
 
         {/* KPIs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
           {isLoading ? (
             [1,2,3,4].map(i => <SkeletonCard key={i} />)
           ) : [
@@ -117,26 +117,26 @@ export function AdminDashboard() {
               color: 'text-primary', bg: 'bg-primary/8', trend: null },
           ].map(({ label, value, icon: Icon, color, bg, trend }) => (
             <div key={label} className="bg-white rounded-2xl p-5 border border-slate-100 
-              shadow-sm hover:shadow-md transition-shadow card-hover">
+              shadow-sm hover:shadow-md transition-shadow card-hover min-w-0">
               <div className="flex items-center justify-between mb-4">
-                <div className={`w-10 h-10 ${bg} ${color} rounded-xl flex items-center justify-center`}>
+                <div className={`w-10 h-10 ${bg} ${color} rounded-xl flex items-center justify-center flex-shrink-0`}>
                   <Icon className="w-5 h-5" />
                 </div>
                 {trend && (
-                  <span className={`text-xs font-semibold px-2 py-1 rounded-full 
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap
                     ${trend.includes('⚠') ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
                     {trend}
                   </span>
                 )}
               </div>
-              <p className="text-sm text-slate-500 font-medium">{label}</p>
-              <p className="text-2xl font-bold text-slate-900 mt-1 font-display">{value}</p>
+              <p className="text-sm text-slate-500 font-medium truncate">{label}</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1 font-display truncate">{value}</p>
             </div>
           ))}
         </div>
 
         {/* Tableau */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col w-full min-w-0">
           <div className="px-4 sm:px-6 py-4 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="font-bold text-slate-900">Dossiers à traiter</h2>

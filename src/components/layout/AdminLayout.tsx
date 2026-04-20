@@ -137,7 +137,7 @@ export function AdminLayout() {
       )}
 
       {/* Main */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden w-full">
         {/* Topbar mobile */}
         <div className="lg:hidden flex items-center justify-between px-4 py-3 
           bg-white border-b border-slate-100 shadow-sm sticky top-0 z-30">

@@ -15,15 +15,15 @@ export function AdminStatistics() {
   const timeData = stats?.timeData || [];
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
-      <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 sticky top-0 z-10">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 font-display">Statistiques & Performances</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Analysez l'activité et les revenus de la plateforme.</p>
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
+      <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 sticky top-0 z-10 w-full">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-slate-900 font-display truncate">Statistiques & Performances</h1>
+            <p className="text-sm text-slate-500 mt-0.5 truncate">Analysez l'activité et les revenus de la plateforme.</p>
           </div>
           
-          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-lg shadow-sm overflow-x-auto scrollbars-hidden">
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-lg shadow-sm overflow-x-auto scrollbars-hidden shrink-0 w-full md:w-auto">
             {[
               { id: 'today', label: "Aujourd'hui" },
               { id: '7days', label: '7 jours' },

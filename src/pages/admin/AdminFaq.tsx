@@ -185,27 +185,27 @@ export function AdminFaq() {
   const filtered = faqs?.filter(f => !activeCategory || f.category === activeCategory) ?? [];
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
       <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 
-        sticky top-0 z-10">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">FAQ</h1>
-            <p className="text-sm text-slate-500 mt-0.5">
+        sticky top-0 z-10 w-full">
+        <div className="flex sm:items-center flex-col sm:flex-row justify-between w-full min-w-0 gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-slate-900 truncate">FAQ</h1>
+            <p className="text-sm text-slate-500 mt-0.5 truncate">
               {faqs?.filter(f => f.is_published).length} question(s) publiée(s)
             </p>
           </div>
           <button onClick={() => setModal({ open: true })}
-            className="flex items-center gap-2 px-4 py-2.5 gradient-primary text-white 
+            className="flex items-center justify-center sm:justify-start gap-2 px-4 py-2.5 gradient-primary text-white 
               text-sm font-semibold rounded-xl shadow-md shadow-primary/20 
-              hover:shadow-lg hover:-translate-y-0.5 transition-all">
+              hover:shadow-lg hover:-translate-y-0.5 transition-all shrink-0 w-full sm:w-auto">
             <Plus className="w-4 h-4" />
             Ajouter
           </button>
         </div>
       </header>
 
-      <div className="p-4 md:p-8 max-w-3xl mx-auto w-full space-y-6">
+      <div className="p-4 md:p-8 max-w-3xl mx-auto w-full space-y-6 min-w-0">
         {/* Filtres catégories */}
         <div className="flex items-center gap-2 flex-wrap">
           {[null, ...CATEGORIES].map(cat => (

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Spline from '@splinetool/react-spline';
 import { Link } from 'react-router-dom';
 import { useSettings } from '../../hooks/useSettings';
 import { 
@@ -10,20 +11,24 @@ function HeroSection() {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <section 
-      className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-900 bg-[url('/bg-hero.jpg')] bg-cover bg-center"
-    >
-      {/* Overlay sombre pour garantir la lisibilité du texte par-dessus l'image */}
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px]" />
+    <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-900 border-b border-white/5">
+      {/* Spline 3D Background */}
+      <div className="absolute inset-0 z-0">
+        <Spline scene="https://prod.spline.design/x4hLf7TYnpqbhNnn/scene.splinecode" />
+      </div>
 
-      {/* Background gradients (Aura) */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] opacity-40 pointer-events-none mix-blend-screen z-0">
+      {/* Overlay sombre pour assurer la lisibilité du texte sur le fond 3D */}
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px] pointer-events-none z-0" />
+
+      {/* Background gradients */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] opacity-30 pointer-events-none z-0">
         <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-[100px]" />
       </div>
       
-      <div className="container mx-auto px-6 relative z-10">
+      {/* Contenu principal positionné par dessus le background (z-10, grid pointer-events) */}
+      <div className="container mx-auto px-6 relative z-10 pointer-events-none">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="animate-fade-in-up">
+          <div className="animate-fade-in-up pointer-events-auto">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-white text-sm font-medium mb-6">
               <Zap className="w-4 h-4 text-amber-400" />
               <span>Nouveau : Kbis en 48h chrono</span>
@@ -58,7 +63,7 @@ function HeroSection() {
 
           {/* 3D Mockup */}
           <div 
-            className="relative hidden lg:block animate-fade-in-up"
+            className="relative hidden lg:block animate-fade-in-up pointer-events-auto"
             style={{ perspective: '1000px' }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}

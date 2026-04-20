@@ -44,15 +44,15 @@ export function ClientPayments() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
-      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 font-display">Mes paiements</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Consultez l'historique de vos paiements et téléchargez vos factures.</p>
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
+      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10 w-full">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-slate-900 font-display truncate">Mes paiements</h1>
+          <p className="text-sm text-slate-500 mt-0.5 truncate">Consultez l'historique de vos paiements et téléchargez vos factures.</p>
         </div>
       </header>
 
-      <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto w-full">
+      <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto w-full min-w-0">
         {isLoading ? (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 flex justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -68,7 +68,7 @@ export function ClientPayments() {
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col w-full min-w-0">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[700px]">
                 <thead>

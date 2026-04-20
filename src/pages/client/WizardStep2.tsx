@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +10,7 @@ import { Building2, MapPin, ArrowLeft, ArrowRight, AlertCircle, Loader2 } from '
 
 export function WizardStep2() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: wizardData, setCompanyInfo, canProceedToStep } = useWizard();
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export function WizardStep2() {
       if (!wizardData.formaliteId) return null;
       const { data, error } = await supabase
         .from('formalites_catalogue')
-        .select('form_schema, name')
+        .select('form_schema, name, required_documents')
         .eq('id', wizardData.formaliteId)
         .single();
       if (error) throw error;
@@ -34,6 +35,10 @@ export function WizardStep2() {
 
   const schema = formalite?.form_schema as { steps: any[] } | null;
   const hasCustomForm = schema?.steps && schema.steps.length > 0;
+  
+  const requiredDocsText = typeof formalite?.required_documents === 'string'
+    ? formalite.required_documents
+    : (formalite?.required_documents as any)?.text || '';
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<any>({
     defaultValues: wizardData.companyInfo ?? {},
@@ -45,17 +50,16 @@ export function WizardStep2() {
     }
   }, [wizardData.companyInfo, reset]);
 
-  const [currentSchemaStep, setCurrentSchemaStep] = useState(0);
+  // Use URL search param for current schema step, default to 0
+  const stepParam = searchParams.get('step');
+  const currentSchemaStep = stepParam ? parseInt(stepParam, 10) : 0;
+  
   const schemaSteps = schema?.steps ?? [];
   const currentSchemaStepData = schemaSteps[currentSchemaStep];
   const isLastSchemaStep = currentSchemaStep >= schemaSteps.length - 1;
 
   const onSubmit = async (data: any) => {
-    if (!isLastSchemaStep && hasCustomForm) {
-      setCurrentSchemaStep(s => s + 1);
-      return;
-    }
-    setCompanyInfo(data);
+    setCompanyInfo({ ...wizardData.companyInfo, ...data });
 
     // Save draft
     try {
@@ -64,7 +68,7 @@ export function WizardStep2() {
           .from('dossiers')
           .update({
             form_data: {
-              companyInfo: data,
+              companyInfo: { ...wizardData.companyInfo, ...data },
               documents: wizardData.documents,
             } as any,
             status: 'pending_documents'
@@ -73,6 +77,13 @@ export function WizardStep2() {
       }
     } catch (err) {
       console.error('Failed to save draft', err);
+    }
+
+    if (!isLastSchemaStep && hasCustomForm) {
+      navigate(`/formalite/etape-2?step=${currentSchemaStep + 1}`);
+      // Scroll to top
+      window.scrollTo(0, 0);
+      return;
     }
 
     navigate('/formalite/etape-3');
@@ -172,24 +183,28 @@ export function WizardStep2() {
 
   // Si pas de form_schema configuré → formulaire par défaut
   if (!hasCustomForm) {
-    return <DefaultCompanyForm onSubmit={onSubmit} defaultValues={wizardData.companyInfo} />;
+    return (
+      <>
+        {requiredDocsText && (
+          <div className="max-w-2xl mx-auto mb-8 p-6 bg-blue-50 border border-blue-100 rounded-2xl flex items-start gap-4 animate-fade-in-up">
+            <div className="p-3 bg-blue-100 rounded-xl text-blue-600 flex-shrink-0">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-blue-900 mb-2">À préparer pour cette formalité</h3>
+              <div className="text-sm text-blue-800 whitespace-pre-wrap leading-relaxed">
+                {requiredDocsText}
+              </div>
+            </div>
+          </div>
+        )}
+        <DefaultCompanyForm onSubmit={onSubmit} defaultValues={wizardData.companyInfo} />
+      </>
+    );
   }
 
   return (
     <div className="max-w-2xl mx-auto animate-fade-in-up">
-      {/* Progress des sous-étapes du schema */}
-      {schemaSteps.length > 1 && (
-        <div className="flex items-center gap-2 mb-8">
-          {schemaSteps.map((s, idx) => (
-            <div key={s.id} className="flex items-center gap-2 flex-1">
-              <div className={`flex-1 h-1.5 rounded-full transition-all ${
-                idx <= currentSchemaStep ? 'bg-primary' : 'bg-slate-200'
-              }`} />
-            </div>
-          ))}
-        </div>
-      )}
-
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold text-slate-900 mb-2">
           {currentSchemaStepData?.title ?? 'Informations'}
@@ -198,6 +213,20 @@ export function WizardStep2() {
           <p className="text-slate-500">{currentSchemaStepData.description}</p>
         )}
       </div>
+
+      {currentSchemaStep === 0 && requiredDocsText && (
+        <div className="mb-8 p-6 bg-blue-50 border border-blue-100 rounded-2xl flex items-start gap-4">
+          <div className="p-3 bg-blue-100 rounded-xl text-blue-600 flex-shrink-0">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-blue-900 mb-2">À préparer pour cette formalité</h3>
+            <div className="text-sm text-blue-800 whitespace-pre-wrap leading-relaxed">
+              {requiredDocsText}
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
@@ -221,7 +250,10 @@ export function WizardStep2() {
         <div className="flex items-center justify-between mt-6 pt-4">
           <button type="button"
             onClick={() => {
-              if (currentSchemaStep > 0) setCurrentSchemaStep(s => s - 1);
+              if (currentSchemaStep > 0) {
+                navigate(`/formalite/etape-2?step=${currentSchemaStep - 1}`);
+                window.scrollTo(0, 0);
+              }
               else navigate('/formalite');
             }}
             className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium 

@@ -132,7 +132,7 @@ export function ClientLayout() {
       )}
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col overflow-hidden bg-slate-50">
+      <main className="flex-1 flex flex-col overflow-hidden bg-slate-50 min-w-0 w-full">
         {/* Mobile Topbar */}
         <div className="lg:hidden flex items-center justify-between px-4 py-3 
           bg-white border-b border-slate-100 shadow-sm sticky top-0 z-30">

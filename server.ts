@@ -7,10 +7,15 @@ import Stripe from 'stripe';
 import path from "path";
 import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
+import sgMail from '@sendgrid/mail';
 import adminUsersRouter from "./server/routes/admin-users.ts";
 import { requireAdmin } from "./server/middleware/auth.ts";
 
 dotenv.config();
+
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' as any }) 
@@ -94,6 +99,33 @@ async function startServer() {
 
   // API Routes
   app.use("/api/admin/users", adminUsersRouter);
+
+  // SendGrid Email Route
+  app.post("/api/admin/emails/send", requireAdmin, async (req, res) => {
+    try {
+      const { to, subject, body } = req.body;
+      if (!to || !subject || !body) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      if (!process.env.SENDGRID_API_KEY) {
+        return res.status(500).json({ error: "SendGrid API Key is not configured." });
+      }
+
+      const msg = {
+        to,
+        from: process.env.SENDGRID_FROM_EMAIL || 'support@formalia.com', // fallback
+        subject,
+        html: body,
+      };
+
+      await sgMail.send(msg);
+      res.json({ success: true, message: "Email sent successfully" });
+    } catch (error: any) {
+      console.error("SendGrid Error:", error.response?.body || error);
+      res.status(500).json({ error: error.message || "Failed to send email" });
+    }
+  });
 
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });

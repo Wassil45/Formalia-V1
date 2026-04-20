@@ -47,15 +47,15 @@ export function ClientSettings() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
-      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">Paramètres</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Gérez vos informations personnelles et vos préférences.</p>
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
+      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10 w-full">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-slate-900 truncate">Paramètres</h1>
+          <p className="text-sm text-slate-500 mt-0.5 truncate">Gérez vos informations personnelles et vos préférences.</p>
         </div>
       </header>
 
-      <div className="p-4 sm:p-8 max-w-4xl mx-auto w-full">
+      <div className="p-4 sm:p-8 max-w-4xl mx-auto w-full min-w-0">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-slate-100">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-xl font-bold text-blue-600 uppercase flex-shrink-0">

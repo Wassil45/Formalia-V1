@@ -48,9 +48,17 @@ export function Services() {
   return (
     <div className="bg-slate-50 min-h-screen pb-24">
       {/* Hero Section */}
-      <section className="bg-white border-b border-slate-200 pt-32 pb-20 px-6">
-        <div className="max-w-5xl mx-auto text-center animate-fade-in-up">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm font-medium mb-8">
+      <section className="relative bg-slate-900 border-b border-slate-800 pt-32 pb-20 px-6 bg-[url('/bg-hero.jpg?v=2')] bg-cover bg-center overflow-hidden">
+        {/* Overlay sombre pour garantir la lisibilité du texte par-dessus l'image */}
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px]" />
+        
+        {/* Background gradients (Aura) pour garder le style */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] opacity-40 pointer-events-none mix-blend-screen z-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-[100px]" />
+        </div>
+
+        <div className="max-w-5xl mx-auto text-center relative z-10 animate-fade-in-up">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-sm font-medium mb-8">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -58,25 +66,25 @@ export function Services() {
             Mis à jour en temps réel
           </div>
           
-          <h1 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight">
+          <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">
             Toutes vos formalités, <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
               gérées par des experts.
             </span>
           </h1>
           
           <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium">
-              <Zap className="w-4 h-4 text-amber-500" /> Rapide
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 text-slate-200 border border-white/10 backdrop-blur-md rounded-lg text-sm font-medium">
+              <Zap className="w-4 h-4 text-amber-400" /> Rapide
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium">
-              <ShieldCheck className="w-4 h-4 text-emerald-500" /> Sécurisé
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 text-slate-200 border border-white/10 backdrop-blur-md rounded-lg text-sm font-medium">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" /> Sécurisé
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium">
-              <Star className="w-4 h-4 text-blue-500" /> Accompagnement
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 text-slate-200 border border-white/10 backdrop-blur-md rounded-lg text-sm font-medium">
+              <Star className="w-4 h-4 text-blue-400" /> Accompagnement
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium">
-              <FileText className="w-4 h-4 text-purple-500" /> 100% en ligne
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 text-slate-200 border border-white/10 backdrop-blur-md rounded-lg text-sm font-medium">
+              <FileText className="w-4 h-4 text-purple-400" /> 100% en ligne
             </span>
           </div>
         </div>
@@ -125,10 +133,15 @@ export function Services() {
                       const isHighlighted = idx === 1 || (typeServices.length === 1 && service.name.toLowerCase().includes('premium'));
                       const priceTTC = service.price_ttc ?? (service.price_ht * (1 + (service.tva_rate || 20) / 100));
                       
-                      // Séparer la description en liste de fonctionnalités (par retour à la ligne ou point)
+                      // Séparer la description en liste de fonctionnalités
                       const features = service.description?.split(/\n|\. /).filter((f: string) => f.trim().length > 0) || [];
+
+                      // Parse l'icône et sa couleur (format "IconName:color-class" ou juste "IconName")
+                      const iconParts = (service.icon || 'FileText').split(':');
+                      const iconName = iconParts[0];
+                      const iconColorClass = iconParts[1] || (isHighlighted ? 'text-primary' : 'text-slate-500');
                       
-                      const IconComponent = service.icon && (Icons as any)[service.icon] ? (Icons as any)[service.icon] : null;
+                      const IconComponent = (Icons as any)[iconName] ? (Icons as any)[iconName] : Icons.FileText;
 
                       return (
                         <div 
@@ -147,11 +160,9 @@ export function Services() {
                           
                           <div className="mb-6">
                             <div className="flex items-center gap-3 mb-4">
-                              {IconComponent && (
-                                <div className={`p-2 rounded-lg ${isHighlighted ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500'}`}>
-                                  <IconComponent className="w-6 h-6" />
-                                </div>
-                              )}
+                              <div className={`p-2 rounded-lg ${isHighlighted ? 'bg-primary/10' : 'bg-slate-100'} ${iconColorClass}`}>
+                                <IconComponent className="w-6 h-6" />
+                              </div>
                               <h3 className={`text-xl font-bold ${isHighlighted ? 'text-primary' : 'text-slate-700'}`}>
                                 {service.name}
                               </h3>

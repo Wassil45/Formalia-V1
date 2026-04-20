@@ -242,3 +242,18 @@ h1, h2, h3, h4, h5, h6, .font-display {
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide Spline Logo globally */
+a[href^="https://spline.design"],
+a[href*="spline.design"],
+div > div > a[href^="https://spline"],
+canvas + div {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  z-index: -9999 !important;
+}

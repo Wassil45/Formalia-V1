@@ -70,8 +70,8 @@ export function Dashboard() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
-      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6 sm:space-y-8 animate-fade-in-up">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6 sm:space-y-8 animate-fade-in-up min-w-0">
         
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -117,7 +117,7 @@ export function Dashboard() {
       )}
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
         {isLoading ? (
           [1,2,3,4].map(i => <SkeletonCard key={i} />)
         ) : [
@@ -140,21 +140,21 @@ export function Dashboard() {
           },
         ].map(({ label, value, icon: Icon, color, bg, badge }) => (
           <div key={label} className="bg-white rounded-2xl p-5 border border-slate-100 
-            shadow-sm hover:shadow-md transition-shadow card-hover relative">
+            shadow-sm hover:shadow-md transition-shadow card-hover relative min-w-0">
             {badge && (
               <span className="absolute top-4 right-4 w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-sm shadow-red-500/50" />
             )}
-            <div className={`w-10 h-10 ${bg} ${color} rounded-xl flex items-center justify-center mb-4`}>
+            <div className={`w-10 h-10 ${bg} ${color} rounded-xl flex items-center justify-center mb-4 shrink-0`}>
               <Icon className="w-5 h-5" />
             </div>
-            <p className="text-sm text-slate-500 font-medium">{label}</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1 font-display">{value}</p>
+            <p className="text-sm text-slate-500 font-medium truncate">{label}</p>
+            <p className="text-2xl font-bold text-slate-900 mt-1 font-display truncate">{value}</p>
           </div>
         ))}
       </div>
 
       {/* Table (Desktop) / Cards (Mobile) */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col w-full min-w-0">
         <div className="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-50 flex justify-between items-center">
           <h2 className="font-bold text-slate-900">Dossiers récents</h2>
           {dossiers && dossiers.length > 5 && (

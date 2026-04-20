@@ -87,15 +87,15 @@ export function AdminSettings() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
-      <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-slate-900">Paramètres</h1>
-        <p className="text-sm text-slate-500 mt-0.5">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
+      <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 sticky top-0 z-10 w-full">
+        <h1 className="text-xl font-bold text-slate-900 truncate">Paramètres</h1>
+        <p className="text-sm text-slate-500 mt-0.5 truncate">
           Configuration globale du site
         </p>
       </header>
 
-      <div className="p-4 md:p-8 max-w-3xl mx-auto w-full space-y-6">
+      <div className="p-4 md:p-8 max-w-3xl mx-auto w-full space-y-6 min-w-0">
 
         {/* Section Logo */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">

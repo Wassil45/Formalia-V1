@@ -67,23 +67,23 @@ export function DossiersList() {
   }) ?? [];
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
       <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-5 
-        flex items-center justify-between sticky top-0 z-10">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">Mes dossiers</h1>
-          <p className="text-sm text-slate-500">{dossiers?.length ?? 0} dossier(s)</p>
+        flex items-center justify-between sticky top-0 z-10 w-full">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-slate-900 truncate">Mes dossiers</h1>
+          <p className="text-sm text-slate-500 truncate">{dossiers?.length ?? 0} dossier(s)</p>
         </div>
         <Link to="/formalite"
           className="flex items-center gap-2 px-4 py-2.5 gradient-primary text-white 
             text-sm font-semibold rounded-xl shadow-md shadow-primary/20 
-            hover:shadow-lg hover:-translate-y-0.5 transition-all">
+            hover:shadow-lg hover:-translate-y-0.5 transition-all shrink-0">
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Nouvelle formalité</span>
         </Link>
       </header>
 
-      <div className="p-4 md:p-8 max-w-5xl mx-auto w-full space-y-6">
+      <div className="p-4 md:p-8 max-w-5xl mx-auto w-full space-y-6 min-w-0">
         {/* En-tête avec filtres */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">

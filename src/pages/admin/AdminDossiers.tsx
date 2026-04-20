@@ -530,14 +530,14 @@ export function AdminDossiers() {
   }, [dossiers, search, statusFilter, dateFilter]);
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
-      <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 sticky top-0 z-10">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">Dossiers</h1>
-            <p className="text-sm text-slate-500">{filtered.length} dossier(s)</p>
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
+      <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 sticky top-0 z-10 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-slate-900 truncate">Dossiers</h1>
+            <p className="text-sm text-slate-500 truncate">{filtered.length} dossier(s)</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
             <div className="relative flex-1 sm:flex-none">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input value={search} onChange={e => setSearch(e.target.value)}
@@ -605,8 +605,8 @@ export function AdminDossiers() {
         </div>
       </header>
 
-      <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+      <div className="p-4 md:p-8 max-w-7xl mx-auto w-full min-w-0">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col w-full min-w-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[800px]">
               <thead>

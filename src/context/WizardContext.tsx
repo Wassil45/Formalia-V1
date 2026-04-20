@@ -18,6 +18,7 @@ export interface WizardDocument {
   url: string;
   size: number;
   type: string;
+  requiredDocId?: string;
 }
 
 export interface WizardData {

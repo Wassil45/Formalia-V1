@@ -93,19 +93,19 @@ export function AdminExports() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
-      <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-5 sticky top-0 z-10">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 font-display">Exports & Rapports</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Téléchargez les données et documents de la plateforme.</p>
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
+      <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-5 sticky top-0 z-10 w-full">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-slate-900 font-display truncate">Exports & Rapports</h1>
+          <p className="text-sm text-slate-500 mt-0.5 truncate">Téléchargez les données et documents de la plateforme.</p>
         </div>
       </header>
 
-      <div className="p-4 md:p-8 max-w-[1600px] mx-auto w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      <div className="p-4 md:p-8 max-w-[1600px] mx-auto w-full min-w-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 w-full min-w-0">
           
           {/* Card 1: Export des dossiers (CSV) */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col min-w-0">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50">
             <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-4">
               <FileSpreadsheet className="w-6 h-6" />
@@ -159,7 +159,7 @@ export function AdminExports() {
         </div>
 
         {/* Card 2: Export des documents clients (ZIP) */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col min-w-0">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50">
             <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4">
               <FileArchive className="w-6 h-6" />
@@ -206,7 +206,7 @@ export function AdminExports() {
         </div>
 
         {/* Card 3: Rapports mensuels (PDF) */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col min-w-0">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50">
             <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-4">
               <FileText className="w-6 h-6" />

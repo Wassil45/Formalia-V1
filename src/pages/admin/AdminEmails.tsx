@@ -267,15 +267,15 @@ export function AdminEmails() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
-      <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-slate-900">Modèles d'emails</h1>
-        <p className="text-sm text-slate-500 mt-0.5">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
+      <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 sticky top-0 z-10 w-full">
+        <h1 className="text-xl font-bold text-slate-900 truncate">Modèles d'emails</h1>
+        <p className="text-sm text-slate-500 mt-0.5 truncate">
           Personnalisez les emails automatiques envoyés aux clients
         </p>
       </header>
 
-      <div className="p-4 md:p-8 max-w-4xl mx-auto w-full space-y-4">
+      <div className="p-4 md:p-8 max-w-4xl mx-auto w-full space-y-4 min-w-0">
         
         {/* Info banner */}
         <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 

@@ -51,15 +51,15 @@ export function ClientDocuments() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
-      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 font-display">Documents</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Retrouvez tous vos documents officiels (Kbis, statuts, etc.).</p>
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
+      <header className="bg-white border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10 w-full">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-slate-900 font-display truncate">Documents</h1>
+          <p className="text-sm text-slate-500 mt-0.5 truncate">Retrouvez tous vos documents officiels (Kbis, statuts, etc.).</p>
         </div>
       </header>
 
-      <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto w-full">
+      <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto w-full min-w-0">
 
       {isLoading ? (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 flex justify-center">

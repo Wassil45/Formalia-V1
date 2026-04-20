@@ -165,11 +165,24 @@ export function useUpdateBulkDossierStatus() {
 export function useSendAdminEmail() {
   return useMutation({
     mutationFn: async ({ to, subject, body }: { to: string, subject: string, body: string }) => {
-      // In a real app, this would call an Edge Function to send an email via SendGrid
-      console.log('Sending email to:', to, 'Subject:', subject, 'Body:', body);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return { success: true };
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const res = await fetch('/api/admin/emails/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ to, subject, body })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP Error ${res.status}`);
+      }
+
+      return res.json();
     }
   });
 }

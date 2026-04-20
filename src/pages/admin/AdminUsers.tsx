@@ -95,16 +95,15 @@ export function AdminUsers() {
   }), [users]);
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50">
-
+    <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 min-w-0 w-full">
       {/* Header */}
-      <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 sticky top-0 z-10">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">Utilisateurs</h1>
-            <p className="text-sm text-slate-500">{stats.total} comptes enregistrés</p>
+      <header className="bg-white border-b border-slate-100 px-4 md:px-8 py-4 sticky top-0 z-10 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-slate-900 truncate">Utilisateurs</h1>
+            <p className="text-sm text-slate-500 truncate">{stats.total} comptes enregistrés</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
             <div className="relative flex-1 sm:flex-none">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -156,28 +155,28 @@ export function AdminUsers() {
         </div>
       </header>
 
-      <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
+      <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto w-full min-w-0">
 
         {/* KPIs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full">
           {[
             { label: 'Total', value: stats.total, icon: Users, color: 'text-primary', bg: 'bg-primary/8' },
             { label: 'Clients', value: stats.clients, icon: UserCheck, color: 'text-blue-600', bg: 'bg-blue-50' },
             { label: 'Admins', value: stats.admins, icon: Shield, color: 'text-red-600', bg: 'bg-red-50' },
             { label: 'Cette semaine', value: stats.recent, icon: Calendar, color: 'text-emerald-600', bg: 'bg-emerald-50' },
           ].map(({ label, value, icon: Icon, color, bg }) => (
-            <div key={label} className="bg-white rounded-2xl p-4 md:p-5 border border-slate-100 shadow-sm">
-              <div className={`w-9 h-9 ${bg} ${color} rounded-xl flex items-center justify-center mb-3`}>
+            <div key={label} className="bg-white rounded-2xl p-4 md:p-5 border border-slate-100 shadow-sm min-w-0">
+              <div className={`w-9 h-9 ${bg} ${color} rounded-xl flex items-center justify-center mb-3 shrink-0`}>
                 <Icon className="w-4 h-4" />
               </div>
-              <p className="text-xs text-slate-500 font-medium">{label}</p>
-              <p className="text-2xl font-bold text-slate-900 mt-0.5">{value}</p>
+              <p className="text-xs text-slate-500 font-medium truncate">{label}</p>
+              <p className="text-2xl font-bold text-slate-900 mt-0.5 truncate">{value}</p>
             </div>
           ))}
         </div>
 
         {/* Tableau responsive */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col w-full min-w-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[800px]">
               <thead>
