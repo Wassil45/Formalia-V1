@@ -47,6 +47,29 @@ function FaqItem({ question, answer }: { question: string, answer: string }) {
   );
 }
 
+const sortServices = (services: any[]) => {
+  const typeOrder: Record<string, number> = {
+    'immatriculation': 1,
+    'modification': 2,
+    'radiation': 3
+  };
+  
+  return [...services].sort((a, b) => {
+    // 1. Ordre par type (Création -> Modification -> Fermeture)
+    const orderA = typeOrder[a.type] || 99;
+    const orderB = typeOrder[b.type] || 99;
+    if (orderA !== orderB) return orderA - orderB;
+    
+    // 2. Par order_index (facultatif si défini en admin)
+    if (a.order_index != null && b.order_index != null && a.order_index !== b.order_index) {
+      return a.order_index - b.order_index;
+    }
+    
+    // 3. Par prix HT par défaut
+    return (a.price_ht || 0) - (b.price_ht || 0);
+  });
+};
+
 export function Tarifs() {
   const { data: services, isLoading, isError } = useQuery<any[]>({
     queryKey: ['formalites_catalogue_tarifs'],
@@ -54,25 +77,24 @@ export function Tarifs() {
       // Si Supabase n'est pas configuré, retourner les données mock
       if (!isSupabaseConfigured()) {
         console.warn('Supabase non configuré — données de démonstration utilisées');
-        return MOCK_SERVICES;
+        return sortServices(MOCK_SERVICES);
       }
       
       try {
         const { data, error } = await supabase
           .from('formalites_catalogue')
           .select('*')
-          .eq('is_active', true)
-          .order('price_ht', { ascending: true });
+          .eq('is_active', true);
         
         if (error) {
           console.error('Erreur Supabase:', error);
           // Fallback sur les données mock en cas d'erreur
-          return MOCK_SERVICES;
+          return sortServices(MOCK_SERVICES);
         }
-        return data && data.length > 0 ? data : MOCK_SERVICES;
+        return data && data.length > 0 ? sortServices(data) : sortServices(MOCK_SERVICES);
       } catch (err) {
         console.error('Erreur réseau:', err);
-        return MOCK_SERVICES;
+        return sortServices(MOCK_SERVICES);
       }
     },
     // Ne pas afficher d'erreur si on a des données mock
@@ -147,7 +169,7 @@ export function Tarifs() {
 
                   <div className="mb-6">
                     <span className="inline-block px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg uppercase tracking-wider mb-4">
-                      {service.category}
+                      {service.type === 'immatriculation' ? 'Création' : service.type === 'modification' ? 'Modification' : service.type === 'radiation' ? 'Fermeture' : 'Formalité'}
                     </span>
                     <h3 className="text-2xl font-bold text-slate-900 leading-tight mb-2">
                       {service.name}

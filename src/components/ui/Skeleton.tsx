@@ -19,10 +19,10 @@ export function SkeletonCard() {
   );
 }
 
-export function SkeletonRow() {
+export function SkeletonRow({ columns = 5 }: { columns?: number }) {
   return (
     <tr>
-      {[1,2,3,4,5].map(i => (
+      {Array.from({ length: columns }).map((_, i) => (
         <td key={i} className="px-6 py-4">
           <Skeleton className="h-4 w-full" />
         </td>

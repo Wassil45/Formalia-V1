@@ -72,7 +72,9 @@ export function DossiersList() {
         flex items-center justify-between sticky top-0 z-10 w-full">
         <div className="min-w-0">
           <h1 className="text-xl font-bold text-slate-900 truncate">Mes dossiers</h1>
-          <p className="text-sm text-slate-500 truncate">{dossiers?.length ?? 0} dossier(s)</p>
+          <p className="text-sm text-slate-500 truncate">
+            {isLoading ? 'Chargement...' : `${dossiers?.length ?? 0} dossier(s)`}
+          </p>
         </div>
         <Link to="/formalite"
           className="flex items-center gap-2 px-4 py-2.5 gradient-primary text-white 

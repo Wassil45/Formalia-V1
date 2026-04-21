@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../hooks/useSettings';
+import { ScrollToTop } from '../ui/ScrollToTop';
 import { 
   LayoutDashboard, FolderOpen, FileText, 
   CreditCard, Settings, LogOut, Scale, ChevronRight, Plus, HelpCircle, MessageSquare, Menu, X, Globe
@@ -36,7 +37,7 @@ export function ClientLayout() {
   const SidebarContent = () => (
     <>
       {/* Mobile Header in Sidebar */}
-      <div className="lg:hidden flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
         <div className="flex items-center gap-2.5">
           {logoUrl ? (
             <img src={logoUrl} alt="Logo" className="w-7 h-7 object-contain" />
@@ -111,21 +112,15 @@ export function ClientLayout() {
   return (
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden">
       
-      {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex w-56 flex-shrink-0 h-full bg-white border-r border-slate-100 
-        flex-col shadow-sm">
-        <SidebarContent />
-      </aside>
-
       {/* Sidebar Mobile (Overlay) */}
       {sidebarOpen && (
         <>
           <div 
-            className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
           <aside className="fixed left-0 top-0 bottom-0 z-50 w-72 bg-white 
-            flex flex-col lg:hidden shadow-2xl animate-slide-in-right">
+            flex flex-col shadow-2xl animate-slide-in-right">
             <SidebarContent />
           </aside>
         </>
@@ -133,8 +128,8 @@ export function ClientLayout() {
 
       {/* Main content */}
       <main className="flex-1 flex flex-col overflow-hidden bg-slate-50 min-w-0 w-full">
-        {/* Mobile Topbar */}
-        <div className="lg:hidden flex items-center justify-between px-4 py-3 
+        {/* Topbar */}
+        <div className="flex items-center justify-between px-4 py-3 
           bg-white border-b border-slate-100 shadow-sm sticky top-0 z-30">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -156,8 +151,9 @@ export function ClientLayout() {
           <div className="w-9" /> {/* Spacer */}
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div id="client-scroll-container" className="flex-1 overflow-y-auto relative">
           <Outlet />
+          <ScrollToTop containerId="client-scroll-container" />
         </div>
       </main>
     </div>

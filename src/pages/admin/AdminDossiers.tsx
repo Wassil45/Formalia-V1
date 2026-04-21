@@ -535,7 +535,9 @@ export function AdminDossiers() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
           <div className="min-w-0">
             <h1 className="text-xl font-bold text-slate-900 truncate">Dossiers</h1>
-            <p className="text-sm text-slate-500 truncate">{filtered.length} dossier(s)</p>
+            <p className="text-sm text-slate-500 truncate">
+              {isLoading ? 'Chargement...' : `${filtered.length} dossier(s)`}
+            </p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
             <div className="relative flex-1 sm:flex-none">
@@ -619,7 +621,7 @@ export function AdminDossiers() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {isLoading ? (
-                  [1,2,3,4,5].map(i => <SkeletonRow key={i} />)
+                  [1,2,3,4,5].map(i => <SkeletonRow key={i} columns={7} />)
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center">

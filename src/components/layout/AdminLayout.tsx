@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../hooks/useSettings';
+import { ScrollToTop } from '../ui/ScrollToTop';
 import { 
   LayoutGrid, FolderOpen, Package, Users, Settings, 
   LogOut, Scale, Menu, X, ChevronRight, Bell, HelpCircle, Mail,
@@ -60,7 +61,7 @@ export function AdminLayout() {
         {/* Bouton fermer (mobile seulement) */}
         <button 
           onClick={() => setSidebarOpen(false)}
-          className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white 
+          className="p-1.5 rounded-lg text-slate-400 hover:text-white 
             hover:bg-slate-800 transition-colors"
         >
           <X className="w-5 h-5" />
@@ -115,22 +116,17 @@ export function AdminLayout() {
   return (
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden">
 
-      {/* Sidebar desktop */}
-      <aside className="hidden lg:flex w-60 flex-col bg-slate-900 shrink-0 h-full">
-        <SidebarContent />
-      </aside>
-
       {/* Sidebar mobile (overlay) */}
       {sidebarOpen && (
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/50"
             onClick={() => setSidebarOpen(false)}
           />
           {/* Drawer */}
           <aside className="fixed left-0 top-0 bottom-0 z-50 w-72 bg-slate-900 
-            flex flex-col lg:hidden animate-slide-in-right">
+            flex flex-col animate-slide-in-right">
             <SidebarContent />
           </aside>
         </>
@@ -139,7 +135,7 @@ export function AdminLayout() {
       {/* Main */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden w-full">
         {/* Topbar mobile */}
-        <div className="lg:hidden flex items-center justify-between px-4 py-3 
+        <div className="flex items-center justify-between px-4 py-3 
           bg-white border-b border-slate-100 shadow-sm sticky top-0 z-30">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -161,8 +157,9 @@ export function AdminLayout() {
           <div className="w-9" /> {/* Spacer pour centrer le titre */}
         </div>
 
-        <div className="flex-1 overflow-auto">
+        <div id="admin-scroll-container" className="flex-1 overflow-auto relative">
           <Outlet />
+          <ScrollToTop containerId="admin-scroll-container" />
         </div>
       </main>
     </div>

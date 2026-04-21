@@ -180,7 +180,7 @@ export function Dashboard() {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {isLoading ? (
-                [1,2,3].map(i => <SkeletonRow key={i} />)
+                [1,2,3].map(i => <SkeletonRow key={i} columns={6} />)
               ) : dossiers?.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center">

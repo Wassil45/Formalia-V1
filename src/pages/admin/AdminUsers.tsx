@@ -101,7 +101,9 @@ export function AdminUsers() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
           <div className="min-w-0">
             <h1 className="text-xl font-bold text-slate-900 truncate">Utilisateurs</h1>
-            <p className="text-sm text-slate-500 truncate">{stats.total} comptes enregistrés</p>
+            <p className="text-sm text-slate-500 truncate">
+              {isLoading ? 'Chargement...' : `${stats.total} comptes enregistrés`}
+            </p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
             <div className="relative flex-1 sm:flex-none">

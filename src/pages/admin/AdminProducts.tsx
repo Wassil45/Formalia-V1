@@ -601,7 +601,7 @@ export function AdminProducts() {
               </thead>
               <tbody className="divide-y divide-slate-50">
               {isLoading ? (
-                [1,2,3].map(i => <SkeletonRow key={i} />)
+                [1,2,3].map(i => <SkeletonRow key={i} columns={7} />)
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm">

@@ -140,7 +140,9 @@ export function AdminDashboard() {
           <div className="px-4 sm:px-6 py-4 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="font-bold text-slate-900">Dossiers à traiter</h2>
-              <p className="text-xs text-slate-400 mt-0.5">{filtered.length} résultat(s)</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {isLoading ? 'Chargement...' : `${filtered.length} résultat(s)`}
+              </p>
             </div>
             <div className="relative w-full sm:w-auto">
               <button
@@ -193,7 +195,7 @@ export function AdminDashboard() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {isLoading ? (
-                  [1,2,3,4,5].map(i => <SkeletonRow key={i} />)
+                  [1,2,3,4,5].map(i => <SkeletonRow key={i} columns={6} />)
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-16 text-center">
