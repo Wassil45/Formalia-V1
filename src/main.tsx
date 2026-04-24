@@ -37,6 +37,7 @@ window.addEventListener('unhandledrejection', (event) => {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      networkMode: 'always',
       staleTime: 5 * 60 * 1000,
       retry: (failureCount, error: any) => {
         if (error?.status === 401 || error?.status === 403) return false;
@@ -44,6 +45,9 @@ const queryClient = new QueryClient({
       },
       refetchOnWindowFocus: false,
     },
+    mutations: {
+      networkMode: 'always',
+    }
   },
 });
 

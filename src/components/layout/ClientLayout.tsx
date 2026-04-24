@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../hooks/useSettings';
+import { GlobalSearchTrigger } from '../ui/GlobalSearch';
 import { ScrollToTop } from '../ui/ScrollToTop';
 import { 
   LayoutDashboard, FolderOpen, FileText, 
@@ -51,6 +52,11 @@ export function ClientLayout() {
         <button onClick={() => setSidebarOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg">
           <X className="w-5 h-5" />
         </button>
+      </div>
+
+      {/* Search */}
+      <div className="px-3 pt-4 pb-2 border-b border-transparent">
+        <GlobalSearchTrigger theme="light" />
       </div>
 
       {/* CTA New dossier */}
@@ -112,9 +118,14 @@ export function ClientLayout() {
   return (
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden">
       
-      {/* Sidebar Mobile (Overlay) */}
+      {/* Sidebar Desktop (visible >= lg) */}
+      <aside className="hidden lg:flex w-72 bg-white border-r border-slate-100 flex-col flex-shrink-0 z-20">
+        <SidebarContent />
+      </aside>
+
+      {/* Sidebar Mobile (Overlay < lg) */}
       {sidebarOpen && (
-        <>
+        <div className="lg:hidden">
           <div 
             className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
@@ -123,13 +134,13 @@ export function ClientLayout() {
             flex flex-col shadow-2xl animate-slide-in-right">
             <SidebarContent />
           </aside>
-        </>
+        </div>
       )}
 
       {/* Main content */}
       <main className="flex-1 flex flex-col overflow-hidden bg-slate-50 min-w-0 w-full">
-        {/* Topbar */}
-        <div className="flex items-center justify-between px-4 py-3 
+        {/* Topbar (< lg) */}
+        <div className="lg:hidden flex items-center justify-between px-4 py-3 
           bg-white border-b border-slate-100 shadow-sm sticky top-0 z-30">
           <button
             onClick={() => setSidebarOpen(true)}

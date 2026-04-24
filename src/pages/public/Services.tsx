@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import { ArrowRight, Clock, ShieldCheck, Zap, Star, FileText, CheckCircle2, Sparkles, Info } from 'lucide-react';
 
+import Spline from '@splinetool/react-spline';
+
 const TYPE_COLORS: Record<string, { border: string, glow: string, badge: string, text: string }> = {
   'creation': { border: 'border-l-blue-500', glow: 'hover:shadow-blue-500/20', badge: 'bg-blue-100 text-blue-700', text: 'text-blue-600' },
   'modification': { border: 'border-l-purple-500', glow: 'hover:shadow-purple-500/20', badge: 'bg-purple-100 text-purple-700', text: 'text-purple-600' },
@@ -23,12 +25,18 @@ export function Services() {
       }
       
       try {
-        const { data, error } = await supabase
+        const fetchPromise = supabase
           .from('formalites_catalogue')
           .select('*')
           .eq('is_active', true)
           .order('order_index', { ascending: true })
           .order('price_ht', { ascending: true });
+          
+        const timeoutPromise = new Promise<{data: any, error: any}>((_, reject) => {
+          setTimeout(() => reject(new Error('Supabase request timeout')), 4000);
+        });
+
+        const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
         
         if (error) {
           console.error('Erreur Supabase:', error);
@@ -48,17 +56,22 @@ export function Services() {
   return (
     <div className="bg-slate-50 min-h-screen pb-24">
       {/* Hero Section */}
-      <section className="relative bg-slate-900 border-b border-slate-800 pt-32 pb-20 px-6 bg-[url('/bg-hero.jpg?v=2')] bg-cover bg-center overflow-hidden">
+      <section className="relative bg-slate-900 border-b border-slate-800 pt-32 pb-20 px-6 overflow-hidden">
+        {/* Spline 3D Background */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <Spline scene="https://prod.spline.design/x4hLf7TYnpqbhNnn/scene.splinecode" style={{ pointerEvents: 'none' }} />
+        </div>
+
         {/* Overlay sombre pour garantir la lisibilité du texte par-dessus l'image */}
-        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px] pointer-events-none z-0" />
         
         {/* Background gradients (Aura) pour garder le style */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] opacity-40 pointer-events-none mix-blend-screen z-0">
           <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-[100px]" />
         </div>
 
-        <div className="max-w-5xl mx-auto text-center relative z-10 animate-fade-in-up">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-sm font-medium mb-8">
+        <div className="max-w-5xl mx-auto text-center relative z-10 animate-fade-in-up pointer-events-none">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-sm font-medium mb-8 pointer-events-auto">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -129,8 +142,8 @@ export function Services() {
                   
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
                     {typeServices.map((service, idx) => {
-                      // On met en avant le 2ème élément (index 1) ou celui qui a isPopular
-                      const isHighlighted = idx === 1 || (typeServices.length === 1 && service.name.toLowerCase().includes('premium'));
+                      // On met en avant si le service est marqué populaire
+                      const isHighlighted = service.is_popular === true;
                       const priceTTC = service.price_ttc ?? (service.price_ht * (1 + (service.tva_rate || 20) / 100));
                       
                       // Séparer la description en liste de fonctionnalités

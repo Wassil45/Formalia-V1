@@ -101,7 +101,7 @@ function AppContent() {
           </Route>
 
           {/* ── Wizard — plein écran ── */}
-          <Route element={<ProtectedRoute requiredRole="client" />}>
+          <Route element={<ProtectedRoute requiredRole={['client', 'admin']} />}>
             <Route element={<WizardLayout />}>
               <Route path="/formalite" element={<WizardStep1 />} />
               <Route path="/formalite/etape-2" element={<WizardStep2 />} />

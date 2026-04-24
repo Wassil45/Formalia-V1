@@ -70,36 +70,39 @@ export function ClientPayments() {
         ) : (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col w-full min-w-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[700px]">
+              <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Date</th>
-                    <th className="px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Référence</th>
-                    <th className="px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Prestation</th>
-                    <th className="px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Montant</th>
-                    <th className="px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Statut</th>
-                    <th className="px-6 py-4 text-sm font-semibold text-slate-900 text-right whitespace-nowrap">Facture</th>
+                    <th className="px-4 md:px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Date</th>
+                    <th className="hidden md:table-cell px-4 md:px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Référence</th>
+                    <th className="hidden sm:table-cell px-4 md:px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Prestation</th>
+                    <th className="px-4 md:px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Montant</th>
+                    <th className="px-4 md:px-6 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">Statut</th>
+                    <th className="px-4 md:px-6 py-4 text-sm font-semibold text-slate-900 text-right whitespace-nowrap">Facture</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {payments.map((payment) => (
                     <tr key={payment.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap">
+                      <td className="px-4 md:px-6 py-4 text-sm text-slate-600 whitespace-nowrap">
                         {new Date(payment.created_at).toLocaleDateString('fr-FR')}
+                        <div className="block md:hidden text-xs font-mono mt-1 text-slate-400">
+                          {payment.reference}
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-sm font-mono font-medium text-slate-900 whitespace-nowrap">
+                      <td className="hidden md:table-cell px-4 md:px-6 py-4 text-sm font-mono font-medium text-slate-900 whitespace-nowrap">
                         {payment.reference}
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap">
+                      <td className="hidden sm:table-cell px-4 md:px-6 py-4 text-sm text-slate-600 whitespace-nowrap truncate max-w-[150px]">
                         {payment.formalites_catalogue?.name}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">
-                        {payment.total_amount} € TTC
+                      <td className="px-4 md:px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">
+                        {payment.total_amount} € <span className="text-xs text-slate-500 font-normal">TTC</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                         {getPaymentStatusBadge(payment.stripe_payment_status)}
                       </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                    <td className="px-4 md:px-6 py-4 text-right whitespace-nowrap">
                       <button 
                         disabled={payment.stripe_payment_status !== 'paid' && payment.stripe_payment_status !== 'succeeded'}
                         className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

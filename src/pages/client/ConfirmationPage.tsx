@@ -7,7 +7,7 @@ import { CheckCircle, ArrowRight, FileText, Download, Mail } from 'lucide-react'
 import { motion } from 'motion/react';
 
 export function ConfirmationPage() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { search } = useLocation();
   const params = new URLSearchParams(search);
   const sessionId = params.get('session_id');
@@ -59,10 +59,10 @@ export function ConfirmationPage() {
           Nous n'avons pas pu confirmer votre paiement immédiatement. Si vous avez été débité, votre dossier apparaîtra dans votre espace client d'ici quelques minutes.
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
-          <Link to="/dashboard/dossiers" className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20">
+          <Link to={role === 'admin' ? '/admin/dossiers' : '/dashboard/dossiers'} className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20">
             Voir mes dossiers
           </Link>
-          <Link to="/dashboard" className="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-colors">
+          <Link to={role === 'admin' ? '/admin' : '/dashboard'} className="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-colors">
             Retour à l'accueil
           </Link>
         </div>
@@ -141,7 +141,7 @@ export function ConfirmationPage() {
             </div>
 
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-              <Link to="/dashboard/dossiers" className="flex-1 inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all">
+              <Link to={role === 'admin' ? '/admin/dossiers' : '/dashboard/dossiers'} className="flex-1 inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all">
                 Suivre mon dossier <ArrowRight className="w-5 h-5" />
               </Link>
               <button className="flex-1 inline-flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 px-6 py-4 rounded-2xl font-bold hover:bg-slate-50 transition-all">

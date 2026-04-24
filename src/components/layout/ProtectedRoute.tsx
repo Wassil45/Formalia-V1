@@ -2,7 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 interface ProtectedRouteProps {
-  requiredRole?: 'client' | 'admin';
+  requiredRole?: 'client' | 'admin' | Array<'client' | 'admin'>;
 }
 
 export function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
@@ -29,10 +29,16 @@ export function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
     return <Navigate to={`/auth?redirect=${safePath}`} replace />;
   }
 
-  if (requiredRole && role !== null && role !== requiredRole) {
-    const targetPath = role === 'admin' ? '/admin' : '/dashboard';
-    if (location.pathname !== targetPath) {
-      return <Navigate to={targetPath} replace />;
+  if (requiredRole && role !== null) {
+    const isAllowed = Array.isArray(requiredRole) 
+      ? requiredRole.includes(role as 'client' | 'admin')
+      : role === requiredRole;
+
+    if (!isAllowed) {
+      const targetPath = role === 'admin' ? '/admin' : '/dashboard';
+      if (location.pathname !== targetPath) {
+        return <Navigate to={targetPath} replace />;
+      }
     }
   }
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../hooks/useSettings';
+import { GlobalSearchTrigger } from '../ui/GlobalSearch';
 import { ScrollToTop } from '../ui/ScrollToTop';
 import { 
   LayoutGrid, FolderOpen, Package, Users, Settings, 
@@ -68,6 +69,21 @@ export function AdminLayout() {
         </button>
       </div>
 
+      <div className="p-3 pb-0">
+        <GlobalSearchTrigger />
+      </div>
+
+      <div className="px-3 pt-4 pb-2">
+        <Link to="/formalite"
+          className="flex items-center justify-center gap-2 w-full py-2.5 px-4 
+            gradient-primary text-white text-sm font-semibold rounded-xl 
+            hover:shadow-lg hover:shadow-primary/30 transition-all group"
+        >
+          <span className="group-hover:scale-110 transition-transform">+</span>
+          Nouvelle formalité
+        </Link>
+      </div>
+
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {NAV_ITEMS.map(item => {
@@ -116,12 +132,17 @@ export function AdminLayout() {
   return (
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden">
 
-      {/* Sidebar mobile (overlay) */}
+      {/* Sidebar Desktop (visible >= lg) */}
+      <aside className="hidden lg:flex w-72 bg-slate-900 flex-col flex-shrink-0 z-20">
+        <SidebarContent />
+      </aside>
+
+      {/* Sidebar mobile (overlay < lg) */}
       {sidebarOpen && (
-        <>
+        <div className="lg:hidden">
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 z-40 bg-black/50"
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
           {/* Drawer */}
@@ -129,13 +150,13 @@ export function AdminLayout() {
             flex flex-col animate-slide-in-right">
             <SidebarContent />
           </aside>
-        </>
+        </div>
       )}
 
       {/* Main */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden w-full">
-        {/* Topbar mobile */}
-        <div className="flex items-center justify-between px-4 py-3 
+        {/* Topbar mobile (< lg) */}
+        <div className="lg:hidden flex items-center justify-between px-4 py-3 
           bg-white border-b border-slate-100 shadow-sm sticky top-0 z-30">
           <button
             onClick={() => setSidebarOpen(true)}

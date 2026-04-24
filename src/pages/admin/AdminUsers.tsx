@@ -180,13 +180,14 @@ export function AdminUsers() {
         {/* Tableau responsive */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col w-full min-w-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left min-w-[800px]">
+            <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-slate-50 bg-slate-50/50">
-                  {['Utilisateur', 'Rôle', 'Dossiers', 'Inscrit le', 'Actions'].map(h => (
-                    <th key={h} className="px-4 md:px-6 py-3.5 text-xs font-semibold 
-                      text-slate-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                  ))}
+                  <th className="px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Utilisateur</th>
+                  <th className="hidden md:table-cell px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Rôle</th>
+                  <th className="hidden md:table-cell px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Dossiers</th>
+                  <th className="hidden md:table-cell px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Inscrit le</th>
+                  <th className="px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -225,17 +226,26 @@ export function AdminUsers() {
                               justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm">
                               {initials || user.email?.[0]?.toUpperCase() || '?'}
                             </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-slate-900 truncate">
-                                {user.first_name && user.last_name 
-                                  ? `${user.first_name} ${user.last_name}`
-                                  : user.email}
-                              </p>
+                            <div className="min-w-0 max-w-[140px] xs:max-w-[180px] sm:max-w-none">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold text-slate-900 truncate">
+                                  {user.first_name && user.last_name 
+                                    ? `${user.first_name} ${user.last_name}`
+                                    : user.email}
+                                </p>
+                              </div>
                               <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                              <div className="flex md:hidden mt-1">
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 
+                                  rounded text-[10px] font-semibold 
+                                  ${roleConfig?.bg} ${roleConfig?.color}`}>
+                                  {roleConfig?.label}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                        <td className="hidden md:table-cell px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 
                             rounded-lg text-xs font-semibold 
                             ${roleConfig?.bg} ${roleConfig?.color}`}>
@@ -243,21 +253,21 @@ export function AdminUsers() {
                             {roleConfig?.label}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                        <td className="hidden md:table-cell px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="text-sm font-medium text-slate-700">
                             {dossierCounts?.[user.id] ?? 0}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                        <td className="hidden md:table-cell px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="text-sm text-slate-500">
                             {new Date(user.created_at).toLocaleDateString('fr-FR', {
                               day: '2-digit', month: 'short', year: 'numeric'
                             })}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-1 opacity-0 
-                            group-hover:opacity-100 transition-opacity">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap text-right">
+                          <div className="flex items-center justify-end gap-1 sm:opacity-0 
+                            sm:group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={() => setSelectedUser(user)}
                               className="p-2 rounded-lg text-slate-400 hover:text-primary 

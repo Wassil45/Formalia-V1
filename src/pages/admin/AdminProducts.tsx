@@ -23,6 +23,7 @@ const productSchema = z.object({
   tva_rate: z.coerce.number().min(0).max(100).default(20),
   estimated_delay_days: z.coerce.number().min(1).optional(),
   is_active: z.boolean().default(true),
+  is_popular: z.boolean().default(false),
   order_index: z.coerce.number().default(0),
   icon: z.string().default('FileText'),
   iconColor: z.string().optional(),
@@ -161,6 +162,7 @@ function ProductModal({
       } : { 
         tva_rate: 20, 
         is_active: true, 
+        is_popular: false,
         type: 'immatriculation', 
         form_schema: null,
         icon: 'FileText',
@@ -171,6 +173,7 @@ function ProductModal({
     });
 
   const isActive = watch('is_active');
+  const isPopular = watch('is_popular');
   const prixHT = watch('price_ht') ?? 0;
   const tva = watch('tva_rate') ?? 20;
   const prixTTC = +(prixHT * (1 + tva / 100)).toFixed(2);
@@ -196,6 +199,7 @@ function ProductModal({
         tva_rate: data.tva_rate,
         estimated_delay_days: data.estimated_delay_days,
         is_active: data.is_active,
+        is_popular: data.is_popular,
         order_index: data.order_index,
         icon: finalIcon,
         price_ttc: prixTTC,
@@ -206,11 +210,21 @@ function ProductModal({
       if (isEdit) {
         const { error } = await supabase
           .from('formalites_catalogue').update(payload).eq('id', product.id);
-        if (error) throw error;
+        if (error) {
+          if (error.message.includes('is_popular')) {
+             throw new Error("La colonne 'is_popular' n'existe pas encore dans Supabase. Veuillez exécuter : ALTER TABLE formalites_catalogue ADD COLUMN is_popular BOOLEAN DEFAULT false;");
+          }
+          throw error;
+        }
       } else {
         const { error } = await supabase
           .from('formalites_catalogue').insert(payload);
-        if (error) throw error;
+        if (error) {
+          if (error.message.includes('is_popular')) {
+             throw new Error("La colonne 'is_popular' n'existe pas encore dans Supabase. Veuillez exécuter : ALTER TABLE formalites_catalogue ADD COLUMN is_popular BOOLEAN DEFAULT false;");
+          }
+          throw error;
+        }
       }
     },
     onSuccess: () => {
@@ -324,7 +338,7 @@ function ProductModal({
           )}
 
           {/* Délai + Statut */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="text-sm font-medium text-slate-700 mb-1.5 block">
                 Délai (jours)
@@ -348,6 +362,21 @@ function ProductModal({
                   ? <><Eye className="w-4 h-4" /> Visible</>
                   : <><EyeOff className="w-4 h-4" /> Masqué</>
                 }
+              </button>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1.5 block text-center">Mis en avant</label>
+              <button
+                type="button"
+                onClick={() => setValue('is_popular', !isPopular)}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl 
+                  border-2 text-sm font-semibold transition-all ${
+                  isPopular 
+                    ? 'border-primary bg-primary/10 text-primary' 
+                    : 'border-slate-200 bg-slate-50 text-slate-500'
+                }`}
+              >
+                Populaire
               </button>
             </div>
           </div>
@@ -590,13 +619,16 @@ export function AdminProducts() {
         {/* Tableau */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden w-full min-w-0 flex flex-col">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px] text-left">
+            <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-slate-50 bg-slate-50/50">
-                  {['Service', 'Catégorie', 'Prix HT', 'TVA', 'Délai', 'Statut', 'Actions'].map(h => (
-                    <th key={h} className="px-6 py-3.5 text-xs font-semibold text-slate-400 
-                      uppercase tracking-wider whitespace-nowrap">{h}</th>
-                  ))}
+                  <th className="px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Service</th>
+                  <th className="hidden md:table-cell px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Catégorie</th>
+                  <th className="px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Prix HT</th>
+                  <th className="hidden lg:table-cell px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">TVA</th>
+                  <th className="hidden md:table-cell px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Délai</th>
+                  <th className="hidden md:table-cell px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Statut</th>
+                  <th className="px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -617,41 +649,54 @@ export function AdminProducts() {
 
                   return (
                   <tr key={p.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-primary/8 rounded-xl flex items-center 
                           justify-center flex-shrink-0">
                           <IconComponent className={`w-4 h-4 ${iconColorClass}`} />
                         </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">{p.name}</p>
-                          <p className="text-xs text-slate-400 truncate max-w-[180px]">
+                        <div className="min-w-0 max-w-[130px] sm:max-w-none">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-slate-900 truncate">{p.name}</p>
+                            {p.is_popular && (
+                              <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary uppercase tracking-wider">Populaire</span>
+                            )}
+                          </div>
+                          <p className="hidden sm:block text-xs text-slate-400 truncate max-w-[180px]">
                             {p.description}
                           </p>
+                          <div className="flex md:hidden items-center gap-2 mt-1">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold flex items-center gap-1 ${
+                              p.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                            }`}>
+                              {p.is_active ? <Eye className="w-2.5 h-2.5" /> : <EyeOff className="w-2.5 h-2.5" />}
+                              {p.is_active ? 'Visible' : 'Masqué'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="hidden md:table-cell px-4 md:px-6 py-4 whitespace-nowrap">
                       <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg 
                         ${TYPE_COLORS[p.type as keyof typeof TYPE_COLORS]}`}>
                         {TYPE_LABELS[p.type as keyof typeof TYPE_LABELS]}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <span className="text-sm font-semibold text-slate-900">
                         {p.price_ht.toLocaleString('fr-FR', 
                           { style: 'currency', currency: 'EUR' })}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="hidden lg:table-cell px-4 md:px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-slate-600">{p.tva_rate}%</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="hidden md:table-cell px-4 md:px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-slate-600">
                         {p.estimated_delay_days ? `${p.estimated_delay_days}j` : '—'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="hidden md:table-cell px-4 md:px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => toggleActive.mutate({ id: p.id, is_active: !p.is_active })}
                         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg 
@@ -667,8 +712,8 @@ export function AdminProducts() {
                         }
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-1 sm:opacity-0 sm:group-hover:opacity-100 
                         transition-opacity">
                         <button
                           onClick={() => setModal({ open: true, product: p })}

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useSettings } from '../../hooks/useSettings';
+import Spline from '@splinetool/react-spline';
 import { ChevronDown, ChevronUp, Search, HelpCircle } from 'lucide-react';
 
 import { Database } from '../../types/database.types';
@@ -43,13 +44,24 @@ export function Faq() {
     queryKey: ['public_faq'],
     queryFn: async (): Promise<FaqRow[]> => {
       if (!isSupabaseConfigured()) return MOCK_FAQ;
-      const { data, error } = await supabase
+      
+      const fetchPromise = supabase
         .from('faq')
         .select('*')
         .eq('is_published', true)
         .order('order_index');
-      if (error) return MOCK_FAQ;
-      return (data as FaqRow[]) && data.length > 0 ? (data as FaqRow[]) : MOCK_FAQ;
+        
+      const timeoutPromise = new Promise<{data: any, error: any}>((_, reject) => {
+        setTimeout(() => reject(new Error('Supabase request timeout')), 4000);
+      });
+
+      try {
+        const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+        if (error) return MOCK_FAQ;
+        return (data as FaqRow[]) && data.length > 0 ? (data as FaqRow[]) : MOCK_FAQ;
+      } catch (err) {
+        return MOCK_FAQ;
+      }
     },
   });
 
@@ -66,15 +78,22 @@ export function Faq() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-slate-900 via-[#1a1a3a] to-primary 
-        pt-32 pb-20 text-white relative overflow-hidden">
-        <div className="absolute inset-0">
+      <section className="bg-slate-900 pt-32 pb-20 text-white relative overflow-hidden">
+        {/* Spline 3D Background */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <Spline scene="https://prod.spline.design/x4hLf7TYnpqbhNnn/scene.splinecode" style={{ pointerEvents: 'none' }} />
+        </div>
+
+        {/* Overlay sombre pour assurer la lisibilité du texte sur le fond 3D */}
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px] pointer-events-none z-0" />
+
+        <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full 
             blur-3xl -translate-y-1/2 translate-x-1/2" />
         </div>
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center relative z-10">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center relative z-10 pointer-events-none">
           <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center 
-            justify-center mx-auto mb-6 shadow-xl">
+            justify-center mx-auto mb-6 shadow-xl pointer-events-auto">
             <HelpCircle className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-4xl font-black mb-4">
@@ -84,7 +103,7 @@ export function Faq() {
             Tout ce que vous devez savoir sur nos services.
           </p>
           {/* Barre de recherche */}
-          <div className="relative max-w-md mx-auto">
+          <div className="relative max-w-md mx-auto pointer-events-auto">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               value={search}

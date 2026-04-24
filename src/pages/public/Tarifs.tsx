@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { MOCK_SERVICES } from '../../data/mockServices';
 import { Link } from 'react-router-dom';
+import Spline from '@splinetool/react-spline';
 import { CheckCircle2, ChevronDown, ShieldCheck, Lock, CreditCard, Sparkles, ArrowRight, Info } from 'lucide-react';
 
 const FAQ_ITEMS = [
@@ -81,10 +82,16 @@ export function Tarifs() {
       }
       
       try {
-        const { data, error } = await supabase
+        const fetchPromise = supabase
           .from('formalites_catalogue')
           .select('*')
           .eq('is_active', true);
+          
+        const timeoutPromise = new Promise<{data: any, error: any}>((_, reject) => {
+          setTimeout(() => reject(new Error('Supabase request timeout')), 4000);
+        });
+
+        const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
         
         if (error) {
           console.error('Erreur Supabase:', error);
@@ -109,9 +116,17 @@ export function Tarifs() {
     <div className="bg-slate-50 min-h-screen pb-24">
       {/* Hero Section */}
       <section className="bg-slate-900 pt-32 pb-32 px-6 relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/30 blur-[120px] rounded-full pointer-events-none" />
+        {/* Spline 3D Background */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <Spline scene="https://prod.spline.design/x4hLf7TYnpqbhNnn/scene.splinecode" style={{ pointerEvents: 'none' }} />
+        </div>
+
+        {/* Overlay sombre pour assurer la lisibilité du texte sur le fond 3D */}
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px] pointer-events-none z-0" />
+
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/30 blur-[120px] rounded-full pointer-events-none z-0" />
         
-        <div className="max-w-4xl mx-auto text-center relative z-10 animate-fade-in-up">
+        <div className="max-w-4xl mx-auto text-center relative z-10 animate-fade-in-up pointer-events-none">
           <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">
             Des tarifs simples, <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
@@ -149,7 +164,7 @@ export function Tarifs() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services?.map((service, idx) => {
-              const isPopular = service.name.toLowerCase().includes('immatriculation');
+              const isPopular = service.is_popular === true;
               const priceTTC = service.price_ttc ?? (service.price_ht * (1 + (service.tva_rate || 20) / 100));
               
               return (

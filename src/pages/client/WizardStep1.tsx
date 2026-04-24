@@ -174,66 +174,92 @@ export function WizardStep1() {
             </div>
           ))}
         </div>
+      ) : services?.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-2xl border border-slate-100">
+          <p className="text-slate-500">Aucune formalité disponible pour le moment.</p>
+        </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-4">
-          {services?.map(service => {
-            const config = TYPE_CONFIG[service.type as keyof typeof TYPE_CONFIG] 
-              ?? TYPE_CONFIG.immatriculation;
-            const Icon = config.icon;
-            const isSelected = selectedId === service.id;
+        <div className="space-y-12">
+          {['immatriculation', 'modification', 'radiation'].map(type => {
+            const typeServices = services?.filter(s => s.type === type).sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+            if (!typeServices || typeServices.length === 0) return null;
+
+            const typeTitle = {
+              immatriculation: 'Création d\'entreprise',
+              modification: 'Modification statutaire',
+              radiation: 'Fermeture d\'entreprise'
+            }[type];
 
             return (
-              <button
-                key={service.id}
-                onClick={() => setSelectedId(service.id)}
-                className={`relative text-left p-6 rounded-2xl border-2 transition-all duration-200
-                  bg-white hover:-translate-y-1 ${
-                  isSelected
-                    ? 'border-primary shadow-lg shadow-primary/10'
-                    : 'border-slate-100 hover:border-slate-200 hover:shadow-md'
-                }`}
-              >
-                {/* Badge sélectionné */}
-                {isSelected && (
-                  <div className="absolute top-4 right-4">
-                    <CheckCircle2 className="w-5 h-5 text-primary" />
-                  </div>
-                )}
-
-                <div className={`w-12 h-12 ${config.bg} ${config.color} rounded-xl 
-                  flex items-center justify-center mb-4`}>
-                  <Icon className="w-6 h-6" />
+              <div key={type} className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">{typeTitle}</h2>
+                  <div className="w-10 h-1 bg-primary mt-2 rounded-full"></div>
                 </div>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  {typeServices.map((service) => {
+                    const config = TYPE_CONFIG[service.type as keyof typeof TYPE_CONFIG] 
+                      ?? TYPE_CONFIG.immatriculation;
+                    const Icon = config.icon;
+                    const isSelected = selectedId === service.id;
 
-                <div className="mb-3">
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full 
-                    ${config.badge}`}>
-                    {config.label}
-                  </span>
+                    return (
+                      <button
+                        key={service.id}
+                        onClick={() => setSelectedId(service.id)}
+                        className={`relative text-left p-6 rounded-2xl border-2 transition-all duration-200
+                          bg-white hover:-translate-y-1 ${
+                          isSelected
+                            ? 'border-primary shadow-lg shadow-primary/10'
+                            : 'border-slate-100 hover:border-slate-200 hover:shadow-md'
+                        }`}
+                      >
+                        {/* Badge sélectionné */}
+                        {isSelected && (
+                          <div className="absolute top-4 right-4 animate-in zoom-in duration-200">
+                            <CheckCircle2 className="w-6 h-6 text-primary" fill="currentColor" />
+                          </div>
+                        )}
+
+                        <div className={`w-12 h-12 ${config.bg} ${config.color} rounded-xl 
+                          flex items-center justify-center mb-4`}>
+                          <Icon className="w-6 h-6" />
+                        </div>
+
+                        <div className="mb-3">
+                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full 
+                            ${config.badge}`}>
+                            {config.label}
+                          </span>
+                        </div>
+
+                        <h3 className="text-base font-bold text-slate-900 mb-2">
+                          {service.name}
+                        </h3>
+                        <p className="text-sm text-slate-500 mb-4 line-clamp-2">
+                          {service.description}
+                        </p>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                          <div>
+                            <span className="text-xl font-bold text-slate-900">
+                              {service.price_ht}€
+                            </span>
+                            <span className="text-sm text-slate-400 ml-1">HT</span>
+                          </div>
+                          {service.estimated_delay_days && (
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2 py-1 rounded-md">
+                              <Clock className="w-3.5 h-3.5" />
+                              {service.estimated_delay_days}j
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
-
-                <h3 className="text-base font-bold text-slate-900 mb-2">
-                  {service.name}
-                </h3>
-                <p className="text-sm text-slate-500 mb-4 line-clamp-2">
-                  {service.description}
-                </p>
-
-                <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                  <div>
-                    <span className="text-xl font-bold text-slate-900">
-                      {service.price_ht}€
-                    </span>
-                    <span className="text-sm text-slate-400 ml-1">HT</span>
-                  </div>
-                  {service.estimated_delay_days && (
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                      <Clock className="w-3.5 h-3.5" />
-                      {service.estimated_delay_days}j
-                    </div>
-                  )}
-                </div>
-              </button>
+              </div>
             );
           })}
         </div>

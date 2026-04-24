@@ -29,7 +29,7 @@ export function Header() {
     <>
       {/* Overlay blur transparent pour la page (sorti du header pour corriger le bug du backdrop-filter) */}
       <div 
-        className={`md:hidden fixed inset-0 transition-opacity duration-300 z-40 ${
+        className={`lg:hidden fixed inset-0 transition-opacity duration-300 z-40 ${
           isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         style={{ top: '64px', backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
@@ -40,9 +40,9 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="flex items-center justify-between h-16 md:h-20">
             
-            {/* Burger mobile */}
+            {/* Burger mobile & tablette */}
             <button
-              className="md:hidden p-2 -ml-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+              className="lg:hidden p-2 -ml-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="Menu"
             >
@@ -50,7 +50,7 @@ export function Header() {
             </button>
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
+            <Link to="/" className="flex items-center gap-2.5 group absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0">
               {logoUrl ? (
                 <img src={logoUrl} alt={`${settings?.company_name || 'Formalia'} Logo`} className="h-8 object-contain group-hover:scale-105 transition-transform" />
               ) : (
@@ -64,8 +64,8 @@ export function Header() {
               </span>
             </Link>
 
-            {/* Nav desktop */}
-            <nav className="hidden md:flex items-center gap-1">
+            {/* Nav desktop (hidden on md, block on lg) */}
+            <nav className="hidden lg:flex items-center gap-1">
               {navLinks.map(link => (
                 <Link
                   key={link.to}
@@ -93,8 +93,8 @@ export function Header() {
               )}
             </nav>
 
-            {/* Actions desktop */}
-            <div className="hidden md:flex items-center gap-3">
+            {/* Actions desktop (hidden on md, flex on lg) */}
+            <div className="hidden lg:flex items-center gap-3">
               {user ? (
                 <>
                   <button 
@@ -140,9 +140,9 @@ export function Header() {
             </div>
           </div>
 
-          {/* Menu mobile positionné relativement à max-w-7xl mais affiché dessous le header */}
+          {/* Menu mobile/tablette positionné relativement à max-w-7xl mais affiché dessous le header */}
           <div 
-            className={`md:hidden absolute left-0 w-full px-4 pt-2 pb-6 transition-all duration-300 origin-top z-50 ${
+            className={`lg:hidden absolute left-0 w-full px-4 pt-2 pb-6 transition-all duration-300 origin-top z-50 ${
               isMenuOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
             }`} 
             style={{ top: '64px' }}

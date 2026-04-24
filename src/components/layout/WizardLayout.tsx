@@ -6,11 +6,14 @@ import { Scale, X, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 
+import { useAuth } from '../../context/AuthContext';
+
 function WizardHeader() {
   const location = useLocation();
   const navigate = useNavigate();
   const { data: wizardData, canProceedToStep } = useWizard();
   const { data: settings } = useSettings();
+  const { role } = useAuth();
   const logoUrl = settings?.logo_url;
 
   // Retrieve the custom schema steps of the selected formality
@@ -158,7 +161,7 @@ function WizardHeader() {
               {currentStep}/{STEPS.length}
             </span>
             <Link 
-              to="/dashboard" 
+              to={role === 'admin' ? '/admin' : '/dashboard'} 
               className="p-2 rounded-lg text-slate-400 hover:text-slate-600 
                 hover:bg-slate-100 transition-all"
             >

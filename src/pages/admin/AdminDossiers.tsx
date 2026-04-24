@@ -610,13 +610,16 @@ export function AdminDossiers() {
       <div className="p-4 md:p-8 max-w-7xl mx-auto w-full min-w-0">
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col w-full min-w-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left min-w-[800px]">
+            <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-slate-50 bg-slate-50/50">
-                  {['Référence', 'Client', 'Formalité', 'Montant', 'Date', 'Statut', ''].map(h => (
-                    <th key={h} className="px-4 md:px-6 py-3.5 text-xs font-semibold 
-                      text-slate-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                  ))}
+                  <th className="px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Référence</th>
+                  <th className="hidden md:table-cell px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Client</th>
+                  <th className="hidden md:table-cell px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Formalité</th>
+                  <th className="hidden md:table-cell px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Montant</th>
+                  <th className="hidden lg:table-cell px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Date</th>
+                  <th className="px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Statut</th>
+                  <th className="px-4 md:px-6 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -642,9 +645,15 @@ export function AdminDossiers() {
                         <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="text-sm font-mono font-semibold text-slate-700">
                             {d.reference}
+                            <span className="block md:hidden mt-1 text-xs text-slate-500 font-sans font-normal truncate max-w-[130px]">
+                              {d.formalites_catalogue?.name}
+                            </span>
+                            <span className="block md:hidden mt-0.5 text-xs text-slate-400 font-sans font-normal truncate max-w-[130px]">
+                              {d.profiles?.first_name} {d.profiles?.last_name}
+                            </span>
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                        <td className="hidden md:table-cell px-4 md:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2.5">
                             <div className="w-7 h-7 gradient-primary rounded-lg flex items-center 
                               justify-center text-white text-xs font-bold flex-shrink-0">
@@ -660,12 +669,12 @@ export function AdminDossiers() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-slate-700 truncate max-w-[200px] block">
+                        <td className="hidden md:table-cell px-4 md:px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm text-slate-700 truncate max-w-[150px] md:max-w-[200px] block">
                             {d.formalites_catalogue?.name}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                        <td className="hidden md:table-cell px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="text-sm font-semibold text-slate-900">
                             {d.total_amount 
                               ? d.total_amount.toLocaleString('fr-FR', 
@@ -673,7 +682,7 @@ export function AdminDossiers() {
                               : '—'}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                        <td className="hidden lg:table-cell px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="text-sm text-slate-500">
                             {new Date(d.created_at).toLocaleDateString('fr-FR', {
                               day: '2-digit', month: 'short'
@@ -687,9 +696,11 @@ export function AdminDossiers() {
                             {config?.label}
                           </span>
                         </td>
-                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
-                          <Eye className="w-4 h-4 text-slate-300 group-hover:text-primary 
-                            transition-colors" />
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap text-right">
+                          <div className="flex justify-end">
+                            <Eye className="w-4 h-4 text-slate-300 group-hover:text-primary 
+                              transition-colors" />
+                          </div>
                         </td>
                       </tr>
                     );

@@ -13,8 +13,8 @@ function HeroSection() {
   return (
     <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-900 border-b border-white/5">
       {/* Spline 3D Background */}
-      <div className="absolute inset-0 z-0">
-        <Spline scene="https://prod.spline.design/x4hLf7TYnpqbhNnn/scene.splinecode" />
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <Spline scene="https://prod.spline.design/x4hLf7TYnpqbhNnn/scene.splinecode" style={{ pointerEvents: 'none' }} />
       </div>
 
       {/* Overlay sombre pour assurer la lisibilité du texte sur le fond 3D */}
